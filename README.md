@@ -6,7 +6,12 @@
   <img src="docs/images/receipt.jpg" width="560" alt="The Merge-O-Matic page with a purple receipt printer whose display reads THANK YOU, 7 ITEMS +13,654 −2,473, and a long NemoClaw Merge Mart receipt hanging from it listing merged pull requests, returned unmerged pull requests, reviews given, and totals">
 </p>
 
-**[Try it](https://1xaispark.com/games/merge-o-matic)** · Free and open source (MIT) · Works in any modern browser, on laptops and phones
+**[Try it](https://1xaispark.com/games/merge-o-matic)** · **[Watch it print](docs/merge-o-matic-demo.mp4)** (25 s) · Free and open source (MIT) · Works in any modern browser, on laptops and phones
+
+<p align="center">
+  <a href="docs/merge-o-matic-demo.mp4"><img src="docs/images/demo-poster.jpg" width="300" alt="A frame from the demo video: the Halloween-style printer reading PRINTING 7 ITEMS while the receipt feeds out, showing reviews given and the totals"></a>
+  <br><sub>A week of NemoClaw pull requests, recorded with the page's own <b>Record</b> button. Click to play.</sub>
+</p>
 
 ## What's on the receipt
 
@@ -93,7 +98,7 @@ server/
   server.js       Static files and the JSON routes
   lib/            GitHub transport, search and receipt building, key handling, rate limits, usage counts
 test/             node:test suites
-docs/images/      README screenshots
+docs/             Demo video and README screenshots
 ```
 
 ## License
