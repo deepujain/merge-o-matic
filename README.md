@@ -38,7 +38,7 @@ Every line comes from GitHub's public data for that user and repository.
   <img src="docs/images/crayon.jpg" width="400" alt="The Crayon style: hand-drawn multicolored letters and bunting on lined paper, with a SkillSpector Merge Mart receipt">
 </p>
 
-## Run it
+## Run locally
 
 Requires Node.js 20 or later. There's nothing to install or build: no dependencies and no build step.
 
