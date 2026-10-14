@@ -1,0 +1,681 @@
+:root{
+  --bg:#f6f3ee;--panel:#fff;--ink:#1f1b2e;--muted:#6b6478;--line:#e7e1d8;--accent:#7c3aed;--amethyst:#7c3aed;
+  --focus:0 0 0 3px #8b5cf655;--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--rm-sticky-top:12px;color-scheme:light
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100dvh;background:radial-gradient(1200px 500px at 50% -120px,#ede4ff 0,transparent 70%),var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+/* The T font style button with the i button under it: one column level with the heading, flush with the card's right
+   edge (the 720px card inside .mom-main's 20px padding). The demo badge sits to the T's left. No row of their own. */
+.mom-top{position:absolute;top:24px;right:max(20px,calc(50% - 360px));z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px}
+/* The heading area is never shorter than the column, so the card starts below the i button in every style (Normal's
+   plain heading is shorter than the letter tiles). --mom-col-h is three 36px buttons and two 8px gaps; the 10px is the
+   intro's 24px top plus its 22px bottom margin, less the column's 24px top and a 12px gap above the card. Where the
+   heading is too wide for a column beside it, the three buttons become a row above it instead. */
+:root{--mom-col-h:124px}
+.mom-intro{min-height:calc(var(--mom-col-h) - 10px)}
+@media (max-width:720px){
+  .mom-top{top:12px;right:12px;flex-direction:row}
+  .mom-intro{min-height:0;padding-top:44px}
+}
+.mom-badge{position:absolute;top:5px;right:calc(100% + 8px);white-space:nowrap;display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:12px;font-weight:700;letter-spacing:.02em}
+.mom-badge[hidden]{display:none}
+.mom-style{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);box-shadow:0 6px 14px -10px #3b2a6b66;cursor:pointer;transition:background .15s,color .15s}
+.mom-style svg{width:18px;height:18px}
+.mom-style:hover{background:#8b5cf612;color:var(--ink)}
+.mom-style:focus-visible{outline:none;box-shadow:var(--focus)}
+.mom-info-btn[aria-expanded="true"]{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.mom-info-pop{position:absolute;top:calc(100% + 8px);right:0;z-index:40;width:min(320px,calc(100vw - 24px));padding:14px 16px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);text-align:left;font-size:14px;line-height:1.45;box-shadow:0 22px 48px -18px #3b2a6b66,0 2px 6px #1f1b2e14}
+.mom-info-pop[hidden]{display:none}
+.mom-info-pop:focus{outline:none}
+.mom-info-pop:focus-visible{box-shadow:var(--focus),0 22px 48px -18px #3b2a6b66}
+.mom-info-title{margin:0 0 6px;font-size:15px;font-weight:800}
+.mom-info-pop p{margin:0 0 8px;color:var(--muted)}
+.mom-meter{margin-top:12px;padding:10px 12px;border-radius:10px;background:#8b5cf60f;border:1px solid #8b5cf62e}
+.mom-info-pop .mom-meter-line{margin:0;color:var(--ink)}
+.mom-meter-line b{font-size:17px;font-variant-numeric:tabular-nums}
+.mom-meter-bar{height:8px;margin:8px 0 6px;border-radius:999px;background:#8b5cf624;overflow:hidden}
+.mom-meter-bar[hidden]{display:none}
+.mom-meter-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#7c3aed);transition:width .5s ease}
+.mom-meter[data-level="low"] .mom-meter-bar i{background:linear-gradient(90deg,#f59e0b,#ea580c)}
+.mom-meter[data-level="paused"] .mom-meter-bar i{background:#dc2626}
+.mom-info-pop .mom-info-credit{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:#6f6980;text-align:right;letter-spacing:.01em}
+.mom-info-pop .mom-meter-sub{margin:0;font-size:12.5px}
+.mom-info-pop .mom-meter-sub:empty{display:none}
+.mom-meter[data-state="off"],.mom-meter[data-state="demo"]{background:#f59e0b12;border-color:#f59e0b40}
+@media (prefers-reduced-motion:reduce){.mom-meter-bar i{transition:none}}
+@media (prefers-reduced-motion:no-preference){.mom-info-pop:not([hidden]){animation:mom-info-in .18s ease-out both}}
+@keyframes mom-info-in{from{opacity:0;transform:translateY(-4px)}}
+.mom-main{max-width:980px;margin:0 auto;padding:12px 20px 48px}
+.mom-intro{text-align:center;margin:12px 0 22px}
+.mom-intro h1{margin:0;font-size:clamp(30px,5vw,44px);letter-spacing:-.02em;line-height:1.1}
+/* The letter-tile title (Halloween and Crayon); Normal shows the plain heading. */
+.mom-intro h1.mom-title{--edge:#1f1147;display:flex;justify-content:center;padding:6px 0 12px;font:700 clamp(14px,3.4vw,34px)/1 Rockwell,"Roboto Slab","Arial Black",Impact,serif;letter-spacing:0}
+.mom-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mom-word{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.5em .35em;max-width:100%}
+.mom-group{display:inline-flex;align-items:center;white-space:nowrap}
+.ml{--c:#7c3aed;--ring:#fffaf0;--r:0deg;display:inline-grid;place-items:center;width:1.5em;height:1.78em;margin-left:-.18em;font-weight:700;color:#fff;background:linear-gradient(160deg,#ffffff38,transparent 55%),var(--c);border:max(1.5px,.09em) solid var(--edge);border-radius:.38em;
+ box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 .1em 0 #1f114755;-webkit-text-stroke:.16em var(--edge);paint-order:stroke fill;transform:rotate(var(--r))}
+.ml:first-child{margin-left:0}
+.ml-0{--c:#ef4444;--ring:#fee2e2;--r:-5deg}
+.ml-1{--c:#3b82f6;--ring:#dbeafe;border-radius:50%/44%;--r:3deg}
+.ml-2{--c:#10b981;--ring:#d1fae5;height:1.95em;--r:-2deg}
+.ml-3{--c:#f59e0b;--ring:#fef3c7;clip-path:polygon(18% 0,82% 0,100% 18%,100% 82%,82% 100%,18% 100%,0 82%,0 18%);border-radius:.2em;--r:4deg}
+.ml-4{--c:#ec4899;--ring:#fce7f3;--r:-3deg}
+.ml-dash{width:.72em;height:.5em;margin:0 .06em 0 .02em;border-radius:.25em;border-width:max(1px,.07em);box-shadow:none;--c:#fffaf0}
+.ml-5{--r:-6deg}
+.ml-6{--c:#f97316;--ring:#ffedd5;width:1.72em;height:1.72em;border-radius:50%;--r:8deg}
+.ml-7{--r:5deg}
+.ml-8{--c:#14b8a6;--ring:#ccfbf1;border-radius:.3em .3em 45% 45%;--r:-4deg}
+.ml-9{--c:#1e3a8a;--ring:#bfdbfe;height:1.95em;--r:3deg}
+.ml-10{--c:#7c3aed;--ring:#ddd6fe;--r:-2deg}
+.ml-11{--c:#fffaf0;--ring:#ef4444;color:#dc2626;border-color:#dc2626;border-radius:50%/44%;--r:4deg}
+.ml-12{--c:#84cc16;--ring:#ecfccb;clip-path:polygon(18% 0,82% 0,100% 18%,100% 82%,82% 100%,18% 100%,0 82%,0 18%);border-radius:.2em;--r:-3deg}
+@media (prefers-reduced-motion:no-preference){
+ .ml{animation:mom-pop .42s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i) * 66ms)}
+ .ml-0{--i:0}.ml-1{--i:1}.ml-2{--i:2}.ml-3{--i:3}.ml-4{--i:4}.ml-5{--i:5}.ml-6{--i:6}.ml-7{--i:7}.ml-8{--i:8}.ml-9{--i:9}.ml-10{--i:10}.ml-11{--i:11}.ml-12{--i:12}
+}
+@keyframes mom-pop{0%{opacity:0;transform:translateY(-.7em) scale(.3) rotate(0deg)}60%{opacity:1;transform:translateY(.06em) scale(1.12) rotate(var(--r))}100%{opacity:1;transform:rotate(var(--r))}}
+@media (max-width:520px){
+ .mom-intro h1.mom-title{font-size:min(6.4vw,26px)}
+ .mom-group:last-child{flex-basis:100%;justify-content:center}
+}
+@media (forced-colors:active){.ml{border-color:CanvasText}}
+/* Normal: the plain heading in the regular face. */
+.mom-plain{display:none}
+[data-style="normal"] .mom-word{display:none}
+[data-style="normal"] .mom-plain{display:inline}
+[data-style="normal"] .mom-intro h1.mom-title{display:block;padding:0;font:800 clamp(30px,5vw,44px)/1.1 var(--sans);letter-spacing:-.02em}
+.mom-plain .mom-o{--r:0deg;display:inline-block;position:relative}
+.mom-intro p{margin:8px 0 0;color:var(--muted);font-size:15.5px}
+.mom-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;max-width:720px;margin:0 auto;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 18px 40px -28px #3b2a6b55}
+.mom-field{display:grid;gap:6px;min-width:0}
+.mom-field>span{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.mom-field-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.mom-try{padding:0;border:0;background:none;color:inherit;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;opacity:.85}
+.mom-try:hover{opacity:1;color:var(--ink)}
+.mom-try:focus-visible{outline:2px solid #8b5cf6;outline-offset:2px;border-radius:4px}
+.mom-field input:not(#mom-repo-filter),.mom-field select{width:100%;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:11px;background-color:#fbfaf8;color:var(--ink);font:500 15px/1 var(--sans)}
+#mom-login::placeholder{color:#6f6980}
+.mom-field input:not(#mom-repo-filter):focus,.mom-field select:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px #8b5cf62e;background-color:#fff}
+.mom-field select:disabled{color:var(--muted);cursor:default}
+/* Repository picker: the closed control matches the inputs; the popup is a card with a filter and a scroll area. */
+.mom-pick{position:relative;min-width:0}
+.mom-pick-btn,.mom-native{display:flex;align-items:center;gap:8px;width:100%;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:#fbfaf8;color:var(--ink);font:500 15px/1 var(--sans);text-align:left;cursor:pointer}
+.mom-pick-value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mom-pick.is-placeholder .mom-pick-value,.mom-pick-btn:disabled{color:var(--muted)}
+.mom-pick-btn:disabled{cursor:default}
+.mom-pick-chev{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .18s}
+.mom-pick.is-open .mom-pick-chev{transform:rotate(180deg)}
+.mom-pick-btn:focus-visible,.mom-pick.is-open .mom-pick-btn,.mom-native:focus-visible{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px #8b5cf62e;background-color:#fff}
+.mom-pick-pop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;display:flex;flex-direction:column;min-width:min(100%,260px);overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 22px 48px -18px #3b2a6b66,0 2px 6px #1f1b2e14}
+.mom-pick-pop[hidden]{display:none}
+.mom-pick.is-above .mom-pick-pop{top:auto;bottom:calc(100% + 6px)}
+.mom-form:has(.mom-pick.is-open){position:relative;z-index:30}
+.mom-pick-search{display:flex;align-items:center;gap:8px;flex:none;height:42px;padding:0 14px;border-bottom:1px solid var(--line);color:var(--muted);transition:border-color .15s,color .15s}
+.mom-pick-search[hidden]{display:none}
+.mom-pick-search svg{flex:none;width:15px;height:15px}
+.mom-pick-search:focus-within{border-bottom-color:#8b5cf6;color:#7c3aed}
+.mom-pick-search input{flex:1;min-width:0;height:100%;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:var(--ink);font:500 14px/1 var(--sans);outline:none;appearance:none;-webkit-appearance:none}
+.mom-pick-search input::placeholder{color:#6f6980}
+.mom-pick-list:focus{outline:none}
+.mom-pick-list{flex:1 1 auto;min-height:0;margin:0;padding:4px 6px 8px;list-style:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c4b5fd transparent}
+.mom-pick-list::-webkit-scrollbar{width:10px}
+.mom-pick-list::-webkit-scrollbar-thumb{border:3px solid transparent;border-radius:10px;background:#c4b5fd padding-box}
+.mom-pick-list::-webkit-scrollbar-track{background:transparent}
+.mom-pick-opt{display:flex;align-items:center;gap:8px;min-height:36px;padding:7px 10px;border-radius:9px;color:var(--ink);font:500 14.5px/1.3 var(--sans);cursor:pointer;overflow-wrap:anywhere}
+.mom-pick-opt.is-placeholder{color:#6f6980;cursor:default}
+.mom-pick-check{flex:none;width:15px;height:15px;color:var(--accent);visibility:hidden}
+.mom-pick-opt[aria-selected="true"]{font-weight:700}
+.mom-pick-opt[aria-selected="true"] .mom-pick-check{visibility:visible}
+.mom-pick-opt.is-active{background:#8b5cf61a;box-shadow:inset 0 0 0 2px #8b5cf6}
+.mom-pick-empty{margin:0;padding:10px 16px 14px;color:var(--muted);font-size:13.5px}
+.mom-pick-empty[hidden]{display:none}
+/* Touch: the native select, styled the same, opens the device's own picker. */
+.mom-field .mom-native{display:none;appearance:none;-webkit-appearance:none;padding-right:36px;background:#fbfaf8 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6478' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 12px center/16px no-repeat}
+.mom-native:disabled{color:var(--muted);cursor:default}
+@media (pointer:coarse){.mom-pick{display:none}.mom-field .mom-native{display:block}}
+.mom-status{min-height:20px;max-width:720px;margin:10px auto 18px;text-align:center;color:var(--muted);font-size:13.5px}
+.mom-status:empty{min-height:0;margin-top:0}
+.mom-status[data-tone="error"]{color:#b91c1c}
+.mom-status[data-tone="warn"]{color:#92400e}
+
+/* Halloween: a slab face on labels and the range picker, a rounded body face, and thick-edged cards and buttons with
+   a hard drop. The receipt paper and the machine keep their own faces. */
+[data-style="halloween"]{--sans:ui-rounded,"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;--display:Rockwell,"Roboto Slab","Arial Black",Impact,serif;
+ --line-strong:#d6cde3;--edge-soft:#1f114773}
+[data-style="halloween"] body{background:radial-gradient(1200px 500px at 50% -120px,#ede4ff 0,transparent 70%),var(--bg)}
+[data-style="halloween"] .mom-intro p{font-weight:600}
+[data-style="halloween"] .mom-status{font-weight:600}
+[data-style="halloween"] .mom-form{background:var(--panel);border:2.5px solid var(--line-strong);border-radius:22px;padding:18px}
+[data-style="halloween"] .mom-field>span{font:700 12px/1.2 var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+[data-style="halloween"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn){border:2px solid var(--line-strong);border-radius:12px;font-weight:600}
+[data-style="halloween"] .mom-pick-pop{background:var(--panel);border:2.5px solid var(--line-strong);border-radius:18px;box-shadow:0 5px 0 var(--edge-soft),0 24px 48px -20px #3b2a6b77}
+[data-style="halloween"] .mom-pick-search{margin:4px 8px 0;padding:0 8px;border-bottom:1.5px solid var(--line-strong)}
+[data-style="halloween"] .mom-pick-search:focus-within{border-bottom-color:#7c3aed}
+[data-style="halloween"] .mom-pick-list{padding:4px 10px 12px}
+[data-style="halloween"] .mom-pick-opt{font-weight:600}
+[data-style="halloween"] .mom-pick-opt[aria-selected="true"]{font-weight:800;color:#5b21b6}
+[data-style="halloween"] .mom-pick-opt.is-active{background:#ede9fe;box-shadow:inset 0 0 0 2px #7c3aed}
+[data-style="halloween"] .mom-pick-empty{font-weight:600}
+[data-style="halloween"] .receipt-stage[data-chrome="kit"] .receipt-seg{border:2px solid var(--line-strong);background:var(--panel)}
+[data-style="halloween"] .receipt-stage[data-chrome="kit"] .receipt-seg button{font:700 12px/1 var(--display);text-transform:uppercase;letter-spacing:.05em}
+[data-style="halloween"] .receipt-stage[data-chrome="kit"] .receipt-seg button[aria-pressed="true"]{box-shadow:0 2px 0 var(--edge-soft)}
+[data-style="halloween"] .receipt-seg .count{font-family:var(--sans)}
+[data-style="halloween"] .receipt-stage[data-chrome="kit"] .rc-years{background:var(--panel);border:2.5px solid var(--line-strong);border-radius:16px;padding:8px;box-shadow:0 5px 0 var(--edge-soft),0 24px 48px -20px #3b2a6b77}
+[data-style="halloween"] .receipt-stage[data-chrome="kit"] .rc-years button{font:700 13px/1 var(--display);letter-spacing:.05em}
+[data-style="halloween"] .receipt-stage[data-chrome="kit"] .receipt-btn:not(.is-on),[data-style="halloween"] .receipt-dialog .rcd-btn{border:2px solid var(--line-strong);border-radius:11px;background:var(--panel);font-weight:750;letter-spacing:.01em;box-shadow:0 3px 0 var(--edge-soft)}
+[data-style="halloween"] .receipt-dialog .rcd-btn.is-primary{background:linear-gradient(135deg,#9f7aea,var(--amethyst) 55%,#7c3aed);border-color:#4c1d95;box-shadow:0 3px 0 #3b1580}
+[data-style="halloween"] :is(.receipt-btn,.rcd-btn):disabled{box-shadow:none}
+[data-style="halloween"] .receipt-dialog .rcd-head h2{font:700 18px/1.25 var(--display);text-transform:uppercase;letter-spacing:.05em}
+[data-style="halloween"] .mom-info-btn{border:2px solid var(--line-strong);background:var(--panel)}
+[data-style="halloween"] .mom-info-btn[aria-expanded="true"]{background:#ede9fe;color:#5b21b6;border-color:#7c3aed8c}
+[data-style="halloween"] .mom-info-pop{background:var(--panel);border:2.5px solid var(--line-strong);border-radius:18px;box-shadow:0 5px 0 var(--edge-soft),0 24px 48px -20px #3b2a6b77}
+[data-style="halloween"] .mom-info-title{font:700 16px/1.2 var(--display);letter-spacing:.04em;text-transform:uppercase;color:#4c1d95}
+[data-style="halloween"] .mom-meter{border-width:1.5px}
+[data-style="halloween"] .mom-meter-bar{height:10px;border:1.5px solid var(--line-strong)}
+[data-style="halloween"] .mom-info-pop .mom-info-credit{border-top:1.5px solid var(--line-strong);font:700 10.5px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase}
+[data-style="halloween"] .mom-style{border:2px solid var(--line-strong);background:var(--panel)}
+[data-style="halloween"] .mom-style:is(#mom-style[aria-expanded="true"],#mom-music[aria-pressed="true"]){background:#ede9fe;color:#5b21b6;border-color:#7c3aed8c}
+
+/* While a receipt prints, the subtitle, the form, its hint and the kit toolbar fold into the O of the heading, and the
+   receipt rises into the freed space. page.js sets --mom-x/-y/-sx/-sy (and --rc-isl-* for the toolbar) from each box's
+   centre to the O's centre, and --mom-lift for the rise. Each part waits its turn (--mom-w-in/-out) for a slight stagger. */
+.mom-intro{position:relative}
+.mom-intro h1.mom-title{position:relative;z-index:2}
+:is(.mom-top,#mom-sub,.mom-form,.mom-status){--mom-in:.85s;--mom-out:1.05s;--mom-ease-in:cubic-bezier(.5,-.12,.3,1)}
+.mom-top{--mom-w-in:0ms;--mom-w-out:.26s}
+#mom-sub{--mom-w-in:0ms;--mom-w-out:.22s}
+.mom-form{--mom-w-in:.09s;--mom-w-out:.3s}
+.mom-status{--mom-w-in:.18s;--mom-w-out:.4s}
+:is(.mom-top,#mom-sub,.mom-form,.mom-status).is-gathered{pointer-events:none;animation:mom-gather var(--mom-in) var(--mom-ease-in) var(--mom-w-in) both}
+:is(.mom-top,#mom-sub,.mom-form,.mom-status).is-bubbled{animation:mom-bubble var(--mom-out) ease-in-out var(--mom-w-out) both}
+:is(.mom-top,#mom-sub,.mom-form,.mom-status).is-faded.is-gathered{animation:mom-fade-out .3s ease var(--mom-w-in) both}
+:is(.mom-top,#mom-sub,.mom-form,.mom-status).is-faded.is-bubbled{animation:mom-fade-in .4s ease var(--mom-w-out) both}
+/* Bubbling parts pass over the machine as it settles back down. */
+:is(#mom-sub,.mom-form,.mom-status).is-over{position:relative;z-index:6}
+@keyframes mom-gather{to{opacity:0;transform:translate(var(--mom-x,0px),var(--mom-y,0px)) scale(var(--mom-sx,.14),var(--mom-sy,.3))}}
+@keyframes mom-bubble{from{opacity:0;transform:translate(var(--mom-x,0px),var(--mom-y,0px)) scale(var(--mom-sx,.14),var(--mom-sy,.3))}40%{opacity:1;transform:translate(0,0) scale(1.03,.97)}62%{transform:translate(0,0) scale(.99,1.01)}82%{transform:translate(0,0) scale(1.004,.998)}to{opacity:1;transform:translate(0,0) scale(1)}}
+@keyframes mom-fade-in{from{opacity:0}}
+@keyframes mom-fade-out{to{opacity:0}}
+/* The toolbar shares the card's width and edges: the range picker flush left, Record flush right, and Share and
+   Download emerging to Record's left in slots that are always reserved, so nothing shifts. Every control is one height. */
+.mom-receipt{--mom-bar-h:38px}
+[data-style="halloween"] .mom-receipt{--mom-bar-h:40px}
+.mom-receipt .rc-island{width:min(100%,720px)}
+.mom-receipt .receipt-controls{align-items:center;gap:8px;row-gap:10px}
+.mom-receipt .receipt-controls .receipt-spacer{display:none}
+.mom-receipt .receipt-stage[data-chrome="kit"] .receipt-seg{box-sizing:border-box;height:var(--mom-bar-h);align-items:center}
+.mom-receipt .receipt-stage[data-chrome="kit"] .receipt-seg button{height:100%}
+.mom-receipt .receipt-stage[data-chrome="kit"] .receipt-btn{box-sizing:border-box;height:var(--mom-bar-h)}
+.mom-receipt .receipt-controls [data-rc="share"]{order:2;margin-left:auto}
+.mom-receipt .receipt-controls [data-rc="download"]{order:3}
+.mom-receipt .receipt-controls .rc-rec{order:4}
+@media (max-width:620px){.mom-receipt .receipt-controls .receipt-spacer{display:block;flex:0 0 100%;height:0}}
+.mom-receipt{--rc-isl-in:.85s;--rc-isl-out:1.05s;--rc-isl-wait-in:.26s;--rc-isl-wait-out:.5s;--rc-isl-ease-in:cubic-bezier(.5,-.12,.3,1);
+ min-height:420px;margin-top:var(--mom-lift,0px);transition:margin-top 1s cubic-bezier(.3,1.16,.5,1)}
+.mom-receipt.is-lifted{transition-delay:.42s}
+/* The O as the island: it gulps the controls, breathes with a soft glow while the print runs, and bulges as they
+   bubble back out. In recording mode it wears a red dot and the stop button sits at its lower right. */
+.ml-6{position:relative}
+.mom-o.is-island{filter:drop-shadow(0 0 .22em #fb923caa)}
+.mom-plain .mom-o.is-island{color:#ea580c}
+/* Recording: the O itself turns red, rings and pulses, and is the stop control (page.js gives it the button role). */
+.ml-6.is-rec{--c:#ef4444;--ring:#fee2e2;filter:none;box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .1em #fca5a5,0 0 .55em .08em #ef4444b3}
+.mom-plain .mom-o.is-rec{color:#dc2626;filter:none;text-shadow:0 0 .22em #ef444499}
+.mom-o[role="button"]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mom-intro:has(.mom-o.is-rec){z-index:20}
+.mom-o[role="button"]:focus{outline:none}
+.ml-6[role="button"]:focus-visible{box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .1em #fff,0 0 0 .2em #dc2626,0 0 .55em .08em #ef4444b3}
+.mom-plain .mom-o[role="button"]:focus-visible{border-radius:.2em;box-shadow:0 0 0 3px #ef444477}
+.mom-o[data-tip]::after{content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 10px);z-index:4;padding:4px 9px;border-radius:7px;background:#1f1b2e;color:#fff;
+ font:600 12px/1.3 "Inter",system-ui,sans-serif;letter-spacing:0;text-transform:none;white-space:nowrap;-webkit-text-stroke:0;text-shadow:none;pointer-events:none;
+ opacity:0;transform:translate(-50%,-3px) rotate(calc(-1 * var(--r,0deg)));transition:opacity .18s,transform .18s}
+.mom-o[data-tip]:is(:hover,:focus-visible,.is-tip)::after{opacity:1;transform:translate(-50%,0) rotate(calc(-1 * var(--r,0deg)))}
+@media (prefers-reduced-motion:no-preference){
+ .mom-title.is-played .ml:not(.is-island,.is-release){animation:none}
+ .mom-o.is-island{animation:mom-o-gulp .55s cubic-bezier(.3,1.6,.5,1) .8s both,mom-o-breathe 2.4s ease-in-out 1.35s infinite}
+ .mom-o.is-release{animation:mom-o-release .5s cubic-bezier(.3,1.6,.5,1) both}
+ .ml-6.is-rec{animation:mom-o-rec 1.5s ease-in-out infinite}
+ .ml-6.is-rec:focus-visible{animation-name:mom-o-rec-focus}
+ .mom-plain .mom-o.is-rec{animation:mom-o-rec-plain 1.5s ease-in-out infinite}
+}
+@keyframes mom-o-gulp{0%{transform:rotate(var(--r))}35%{transform:rotate(calc(var(--r) - 6deg)) scale(1.22,.86)}70%{transform:rotate(calc(var(--r) + 3deg)) scale(.94,1.06)}100%{transform:rotate(var(--r))}}
+@keyframes mom-o-breathe{0%,100%{transform:rotate(var(--r)) scale(1)}50%{transform:rotate(calc(var(--r) - 4deg)) scale(1.06)}}
+@keyframes mom-o-release{0%{transform:rotate(var(--r))}30%{transform:rotate(var(--r)) scale(1.25)}65%{transform:rotate(var(--r)) scale(.93)}100%{transform:rotate(var(--r))}}
+@keyframes mom-o-rec{0%,100%{transform:rotate(var(--r)) scale(1);box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .1em #fca5a5,0 0 .4em 0 #ef444499}
+ 50%{transform:rotate(var(--r)) scale(1.07);box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .14em #f87171,0 0 .8em .16em #ef4444cc}}
+@keyframes mom-o-rec-focus{0%,100%{transform:rotate(var(--r)) scale(1);box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .1em #fff,0 0 0 .2em #dc2626,0 0 .4em 0 #ef444499}
+ 50%{transform:rotate(var(--r)) scale(1.07);box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .1em #fff,0 0 0 .2em #dc2626,0 0 .8em .16em #ef4444cc}}
+@keyframes mom-o-rec-plain{0%,100%{transform:scale(1);text-shadow:0 0 .15em #ef444480}50%{transform:scale(1.08);text-shadow:0 0 .4em #ef4444cc}}
+/* Idle letters: page.js adds one of these to a random letter or three every few seconds. Transforms only. */
+@media (prefers-reduced-motion:no-preference){
+ :is([data-style="halloween"],[data-style="crayon"]) .mom-title.is-played .ml.is-idle:not(.is-island,.is-release){animation:var(--idle) both}
+ .ml.idle-wiggle{--idle:mom-idle-wiggle .6s ease-in-out}
+ .ml.idle-hop{--idle:mom-idle-hop .55s cubic-bezier(.3,1.5,.5,1)}
+ .ml.idle-tilt{--idle:mom-idle-tilt .8s cubic-bezier(.4,1.4,.5,1)}
+ .ml.idle-squish{--idle:mom-idle-squish .5s ease-in-out}
+ .ml.idle-flip{--idle:mom-idle-flip .7s ease-in-out}
+ .ml.idle-nod{--idle:mom-idle-nod .6s ease-in-out}
+}
+@keyframes mom-idle-wiggle{0%,100%{transform:rotate(var(--r))}20%{transform:rotate(calc(var(--r) - 9deg))}45%{transform:rotate(calc(var(--r) + 7deg))}70%{transform:rotate(calc(var(--r) - 4deg))}}
+@keyframes mom-idle-hop{0%,100%{transform:rotate(var(--r))}15%{transform:rotate(var(--r)) scale(1.06,.9)}45%{transform:translateY(-.32em) rotate(var(--r)) scale(.96,1.06)}75%{transform:rotate(var(--r)) scale(1.04,.95)}}
+@keyframes mom-idle-tilt{0%{transform:rotate(var(--r))}55%{transform:rotate(calc(var(--r) + 360deg)) scale(1.08)}100%{transform:rotate(calc(var(--r) + 360deg))}}
+@keyframes mom-idle-squish{0%,100%{transform:rotate(var(--r))}35%{transform:rotate(var(--r)) scale(1.18,.8)}65%{transform:rotate(var(--r)) scale(.92,1.1)}}
+@keyframes mom-idle-flip{0%{transform:rotate(var(--r)) perspective(10em) rotateY(0)}100%{transform:rotate(var(--r)) perspective(10em) rotateY(360deg)}}
+@keyframes mom-idle-nod{0%,100%{transform:rotate(var(--r))}30%{transform:translateY(.08em) rotate(var(--r)) perspective(10em) rotateX(28deg)}60%{transform:rotate(var(--r)) perspective(10em) rotateX(-10deg)}}
+@media (prefers-reduced-motion:reduce){
+  :is(.mom-top,#mom-sub,.mom-form,.mom-status).is-gathered{animation:mom-fade-out .18s ease both}
+  :is(.mom-top,#mom-sub,.mom-form,.mom-status).is-bubbled{animation:mom-fade-in .18s ease both}
+  .mom-receipt,.mom-receipt.is-lifted{transition:margin-top 0s}
+  .mom-receipt.is-lifted{transition-delay:.2s}
+  .ml-6.is-island{box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .12em #fdba74,0 .1em 0 #1f114755}
+  .ml-6.is-rec{box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .12em #f87171,0 0 .5em .06em #ef4444aa}
+  .ml-6.is-rec[role="button"]:focus-visible{box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 0 0 .1em #fff,0 0 0 .2em #dc2626}
+  .mom-o[data-tip]::after{transition:none}
+}
+@media (max-width:620px){
+  .mom-form{grid-template-columns:1fr}
+  .mom-main{padding:8px 12px 40px}
+  .mom-top{top:12px;right:12px}
+}
+@media print{.mom-top,.mom-intro,.mom-form,.mom-status{display:none!important}.mom-receipt{margin-top:0!important}body{background:#fff}}
+
+/* The T style menu: it unfolds down from the T with a springy scale and each choice drops in after the last. It sits
+   over the music and i buttons in the same column and is never clipped at narrow widths. */
+.mom-style-menu{position:absolute;top:44px;right:0;z-index:45;display:flex;flex-direction:column;gap:2px;width:196px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);box-shadow:0 22px 48px -18px #3b2a6b77;transform-origin:calc(100% - 18px) 0}
+.mom-style-menu[hidden]{display:none}
+.mom-sm-item{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:6px 10px 6px 6px;border:0;border-radius:10px;background:transparent;color:inherit;font:650 14.5px/1.2 var(--sans);text-align:left;cursor:pointer}
+.mom-sm-item:hover,.mom-sm-item:focus-visible{outline:none;background:#8b5cf61a;box-shadow:inset 0 0 0 2px #8b5cf6}
+.mom-sm-name{flex:1}
+.mom-sm-group{display:flex;flex-direction:column;gap:2px}
+.mom-sm-sep{height:0;margin:6px 4px;border-top:1px solid var(--line)}
+.mom-sm-label{margin:2px 10px 2px;color:var(--muted);font:700 11px/1.3 var(--sans);letter-spacing:.08em;text-transform:uppercase}
+.mom-sm-icon.is-appear{width:28px;height:28px;border:1px solid var(--line);border-radius:50%;color:var(--ink)}
+.mom-sm-icon.is-appear svg{width:17px;height:17px}
+.mom-sm-icon.is-light{background:#fff7d6;color:#b45309;border-color:#fcd34d}
+.mom-sm-icon.is-dark{background:#1e1b4b;color:#e0e7ff;border-color:#3730a3}
+.mom-sm-icon.is-auto{background:linear-gradient(135deg,#fff7d6 50%,#1e1b4b 50%);color:var(--ink)}
+.mom-sm-icon.is-auto svg{color:#6d28d9;filter:drop-shadow(0 0 1px #fff)}
+.mom-sm-check{width:18px;height:18px;color:var(--accent);opacity:0;transform:scale(.4);transition:opacity .15s,transform .2s cubic-bezier(.3,1.6,.5,1)}
+.mom-sm-item[aria-checked="true"] .mom-sm-check{opacity:1;transform:none}
+.mom-sm-item[aria-checked="true"]{font-weight:800}
+.mom-sm-icon{display:grid;place-items:center;flex:none;width:30px;height:30px}
+.mom-sm-icon.is-crayon svg{width:28px;height:28px}
+.mom-sm-icon.is-halloween svg{width:28px;height:28px;transform:rotate(5deg)}
+.mom-sm-icon.is-normal{border:1px solid var(--line);border-radius:8px;background:#fbfaf8;color:#1f1b2e;font:800 14px/1 "Inter",system-ui,sans-serif;letter-spacing:-.02em;width:28px;height:28px}
+[data-style="halloween"] .mom-style-menu{background:var(--panel);border:2.5px solid var(--line-strong);border-radius:18px;box-shadow:0 5px 0 var(--edge-soft),0 24px 48px -20px #3b2a6b77;padding:8px}
+[data-style="halloween"] .mom-sm-name{font:700 13px/1.2 var(--display);text-transform:uppercase;letter-spacing:.06em}
+[data-style="halloween"] .mom-sm-sep{border-top:1.5px solid var(--line-strong)}
+[data-style="halloween"] .mom-sm-label{font:700 10.5px/1.3 var(--display);letter-spacing:.1em}
+@media (prefers-reduced-motion:no-preference){
+  .mom-style-menu.is-in{animation:mom-menu-in .42s cubic-bezier(.3,1.45,.5,1) both}
+  .mom-style-menu.is-in .mom-sm-item{animation:mom-menu-item .36s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--sm-i,0) * 45ms)}
+  .mom-style-menu.is-in :is(.mom-sm-sep,.mom-sm-label){animation:mom-menu-item .36s cubic-bezier(.3,1.5,.5,1) .12s both}
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
+}
+@keyframes mom-menu-in{0%{opacity:0;transform:translateY(-10px) scaleY(.2) scaleX(.8)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes mom-menu-item{0%{opacity:0;transform:translateY(-12px)}100%{opacity:1;transform:none}}
+
+/* The music toggle: a note, slashed when off; equalizer bars bounce while music plays. */
+.mom-music svg{width:18px;height:18px}
+.mom-music .mom-eq{display:none;align-items:flex-end;gap:2px;height:16px}
+.mom-music .mom-eq i{display:block;width:3px;height:100%;border-radius:2px;background:currentColor;transform-origin:50% 100%;transform:scaleY(.45)}
+.mom-music .mom-eq i:nth-child(2){transform:scaleY(.8)}
+.mom-music .mom-eq i:nth-child(3){transform:scaleY(.6)}
+.mom-music[aria-pressed="true"] .mom-note-off,.mom-music[aria-pressed="false"] .mom-note-on{display:none}
+.mom-music[aria-pressed="true"][data-playing] .mom-note-on{display:none}
+.mom-music[aria-pressed="true"][data-playing] .mom-eq{display:flex}
+.mom-music[aria-pressed="true"]{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+@media (prefers-reduced-motion:no-preference){
+  .mom-music[data-playing] .mom-eq i{animation:mom-eq .9s ease-in-out infinite alternate}
+  .mom-music[data-playing] .mom-eq i:nth-child(2){animation-duration:.7s;animation-delay:-.3s}
+  .mom-music[data-playing] .mom-eq i:nth-child(3){animation-duration:1.1s;animation-delay:-.6s}
+}
+@keyframes mom-eq{0%{transform:scaleY(.25)}100%{transform:scaleY(1)}}
+
+/* Dark appearance: a deep violet page and cards in dusk tones. Halloween Dark and Crayon Dark, below, refine it. The
+   receipt paper stays thermal white and the machine stays purple. */
+[data-theme="dark"]{--bg:#13101c;--panel:#1e1a2b;--ink:#f1edf9;--muted:#bbb2cc;--line:#342c47;--accent:#7c3aed;--focus:0 0 0 3px #a78bfa66;color-scheme:dark}
+[data-theme="dark"][data-style="halloween"]{--line-strong:#4a3f63;--edge-soft:#000000b3;
+ }
+[data-theme="dark"] body{background:radial-gradient(1200px 500px at 50% -120px,#5b21b659 0,transparent 70%),var(--bg)}
+[data-theme="dark"][data-style="halloween"] body{background:radial-gradient(1200px 500px at 50% -120px,#5b21b659 0,transparent 70%),var(--bg)}
+[data-theme="dark"] :is(.mom-form,.mom-pick-pop,.mom-info-pop,.mom-style-menu){box-shadow:0 5px 0 var(--edge-soft,#000a),0 24px 48px -20px #000d}
+[data-theme="dark"] .mom-style{box-shadow:0 6px 14px -10px #000c}
+[data-theme="dark"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn,.mom-native){background-color:#17131f;color:var(--ink)}
+[data-theme="dark"] :is(.mom-field input:not(#mom-repo-filter):focus,.mom-pick-btn:focus-visible,.mom-pick.is-open .mom-pick-btn,.mom-native:focus-visible){background-color:#1c1729;border-color:#a78bfa;box-shadow:0 0 0 3px #a78bfa40}
+[data-theme="dark"] :is(#mom-login,.mom-pick-search input)::placeholder{color:#9c93b3}
+[data-theme="dark"] .mom-pick-opt.is-placeholder{color:#9c93b3}
+[data-theme="dark"] .mom-pick-search:focus-within{border-bottom-color:#a78bfa;color:#c4b5fd}
+[data-theme="dark"] .mom-pick-opt.is-active{background:#2e1f52;box-shadow:inset 0 0 0 2px #a78bfa}
+[data-theme="dark"][data-style="halloween"] .mom-pick-opt.is-active{background:#2e1f52;box-shadow:inset 0 0 0 2px #a78bfa}
+[data-theme="dark"][data-style="halloween"] .mom-pick-opt[aria-selected="true"]{color:#c4b5fd}
+[data-theme="dark"] :is(.mom-pick-check,.mom-sm-check){color:#a78bfa}
+[data-theme="dark"] .mom-pick-list{scrollbar-color:#5b4a85 transparent}
+[data-theme="dark"] .mom-sm-item:is(:hover,:focus-visible){background:#a78bfa1f;box-shadow:inset 0 0 0 2px #a78bfa}
+[data-theme="dark"] .mom-status[data-tone="error"]{color:#fca5a5}
+[data-theme="dark"] .mom-status[data-tone="warn"]{color:#fcd34d}
+[data-theme="dark"] :is(.mom-music[aria-pressed="true"],.mom-info-btn[aria-expanded="true"],#mom-style[aria-expanded="true"]){background:#2e1f52;color:#ddd6fe;border-color:#8b5cf6}
+[data-theme="dark"][data-style="halloween"] .mom-style:is(#mom-style[aria-expanded="true"],#mom-music[aria-pressed="true"],.mom-info-btn[aria-expanded="true"]){background:#2e1f52;color:#ddd6fe;border-color:#8b5cf6}
+[data-theme="dark"] .mom-style:hover{background:#a78bfa1f}
+[data-theme="dark"][data-style="halloween"] .mom-info-title{color:#ddd6fe}
+[data-theme="dark"] .mom-info-pop .mom-info-credit{color:#a9a0bc}
+[data-theme="dark"] .mom-info-pop .mom-info-count{color:#c4b5fd}
+[data-theme="dark"] .mom-meter{background:#a78bfa14;border-color:#a78bfa40}
+[data-theme="dark"] .mom-meter-bar{background:#ffffff14}
+[data-theme="dark"] .mom-meter[data-state="off"],[data-theme="dark"] .mom-meter[data-state="demo"]{background:#f59e0b14;border-color:#f59e0b4d}
+[data-theme="dark"] .mom-sm-icon.is-normal{background:#2a2438;color:#f1edf9;border-color:#4a3f63}
+[data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button:hover,[data-theme="dark"] .receipt-dialog-x:hover{background:#a78bfa1f}
+[data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg .count{background:#10b98126;color:#6ee7b7}
+[data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-btn:hover:not(:disabled),[data-theme="dark"] .receipt-dialog .rcd-btn:hover:not(:disabled){border-color:#a78bfa99}
+[data-theme="dark"] .receipt-dialog .rcd-error{color:#fca5a5}
+[data-theme="dark"] .receipt-dialog .switch{background:#4b4360}
+[data-theme="dark"] .rm-machine{box-shadow:inset 0 2px 0 #ffffff55,inset 0 -8px 14px #1a063d88,0 22px 34px -16px #000d,0 0 44px -14px #8b5cf666}
+
+/* Halloween: the patch heading with a pumpkin O and letters in orange, black, purple, lime and bone. Halloween Dark
+   is the dusk look (deep purple-black with orange accents); Halloween Light is parchment with orange and purple.
+   Halloween Dark:
+   black, purple, lime and bone. The receipt paper stays thermal white. */
+[data-style="halloween"][data-theme="dark"]{--bg:#150b21;--panel:#231536;--ink:#f6eeff;--muted:#c9b8de;--line:#3f2b59;--line-strong:#5a3f7d;--accent:#f97316;--amethyst:#9333ea;
+ --edge-soft:#00000099;--focus:0 0 0 3px #f9731666;color-scheme:dark}
+[data-style="halloween"][data-theme="dark"] body{background:radial-gradient(900px 420px at 50% -100px,#7c3aed55 0,transparent 70%),radial-gradient(700px 380px at 90% 105%,#f9731626 0,transparent 70%),radial-gradient(600px 320px at 0% 70%,#84cc1612 0,transparent 70%),var(--bg)}
+[data-style="halloween"] .mom-intro h1.mom-title{--edge:#0c0613}
+[data-style="halloween"] .mom-intro p{color:var(--muted)}
+[data-style="halloween"][data-theme="dark"] .mom-form,[data-style="halloween"][data-theme="dark"] :is(.mom-pick-pop,.mom-info-pop,.mom-style-menu){box-shadow:0 5px 0 var(--edge-soft),0 0 0 1px #f9731614,0 24px 48px -20px #000c}
+[data-style="halloween"][data-theme="dark"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn,.mom-native){background-color:#1a0f29;color:var(--ink)}
+[data-style="halloween"][data-theme="dark"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn,.mom-native):focus-visible,
+[data-style="halloween"][data-theme="dark"] .mom-field input:not(#mom-repo-filter):focus,[data-style="halloween"][data-theme="dark"] .mom-pick.is-open .mom-pick-btn{border-color:#f97316;box-shadow:0 0 0 3px #f9731638;background-color:#1f1231}
+[data-style="halloween"][data-theme="dark"] :is(#mom-login,.mom-pick-search input)::placeholder{color:#8e78aa}
+[data-style="halloween"][data-theme="dark"] .mom-pick-search:focus-within{border-bottom-color:#f97316;color:#fdba74}
+[data-style="halloween"][data-theme="dark"] .mom-pick-opt[aria-selected="true"]{color:#fdba74}
+[data-style="halloween"][data-theme="dark"] .mom-pick-opt.is-active,[data-style="halloween"][data-theme="dark"] .mom-sm-item:is(:hover,:focus-visible){background:#f973161f;box-shadow:inset 0 0 0 2px #f97316}
+[data-style="halloween"][data-theme="dark"] .mom-pick-list{scrollbar-color:#7e22ce transparent}
+[data-style="halloween"][data-theme="dark"] .mom-status[data-tone="error"]{color:#fca5a5}
+[data-style="halloween"][data-theme="dark"] .mom-status[data-tone="warn"]{color:#fcd34d}
+[data-style="halloween"][data-theme="dark"] .mom-badge{background:#3b1d0a;color:#fdba74;border-color:#c2410c}
+[data-style="halloween"][data-theme="dark"] .mom-style:hover{background:#f973161a}
+[data-style="halloween"][data-theme="dark"] .mom-style:is(#mom-style[aria-expanded="true"],#mom-music[aria-pressed="true"],.mom-info-btn[aria-expanded="true"]){background:#3b1d0a;color:#fdba74;border-color:#f97316b3}
+[data-style="halloween"][data-theme="dark"] .mom-info-title{color:#fdba74}
+[data-style="halloween"][data-theme="dark"] .mom-meter{background:#f973160f;border-color:#f9731647}
+[data-style="halloween"][data-theme="dark"] .mom-meter-bar{background:#ffffff14}
+[data-style="halloween"][data-theme="dark"] .mom-meter-bar i{background:linear-gradient(90deg,#9333ea,#f97316)}
+[data-style="halloween"][data-theme="dark"] .mom-info-pop .mom-info-credit{color:#a995c2}
+[data-style="halloween"][data-theme="dark"] .mom-sm-icon.is-normal{border-color:#5a3f7d}
+[data-style="halloween"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button:hover,[data-style="halloween"][data-theme="dark"] .receipt-dialog-x:hover{background:#f973161a}
+[data-style="halloween"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg .count{background:#84cc1626;color:#bef264}
+[data-style="halloween"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button[aria-pressed="true"]{color:#1c0a02}
+[data-style="halloween"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button[aria-pressed="true"] .count{background:#1c0a021f;color:#1c0a02}
+[data-style="halloween"][data-theme="dark"] .receipt-dialog .rcd-btn.is-primary{background:linear-gradient(135deg,#fb923c,#f97316 55%,#c2410c);border-color:#7c2d12;box-shadow:0 3px 0 #7c2d12}
+[data-style="halloween"][data-theme="dark"] .receipt-dialog .rcd-error{color:#fca5a5}
+[data-style="halloween"][data-theme="dark"] .receipt-dialog .switch{background:#4b3a63}
+[data-style="halloween"] .rm-machine{background:radial-gradient(120% 90% at 20% 0%,#fdba7466 0%,transparent 50%),linear-gradient(165deg,#8b5cf6 0%,#6d28d9 35%,#4c1d95 72%,#2e1065 100%);box-shadow:inset 0 2px 0 #ffffff55,inset 0 -8px 14px #1a063d88,0 22px 34px -16px #000c,0 0 44px -12px #f9731655}
+[data-style="halloween"] .ml{box-shadow:inset 0 0 0 max(1.5px,.11em) var(--ring),0 .1em 0 #000a}
+[data-style="halloween"] .ml-0{--c:#f97316;--ring:#ffedd5;--r:-7deg}
+[data-style="halloween"] .ml-1{--c:#1c1917;--ring:#f97316;--r:5deg}
+[data-style="halloween"] .ml-2{--c:#7e22ce;--ring:#e9d5ff;--r:-4deg}
+[data-style="halloween"] .ml-3{--c:#65a30d;--ring:#ecfccb;--r:6deg}
+[data-style="halloween"] .ml-4{--c:#f5f0e1;--ring:#7e22ce;color:#f97316;--r:-5deg}
+[data-style="halloween"] .ml-dash{--c:#1c1917}
+[data-style="halloween"] .ml-8{--c:#7e22ce;--ring:#e9d5ff;--r:-6deg}
+[data-style="halloween"] .ml-9{--c:#1c1917;--ring:#84cc16;--r:4deg}
+[data-style="halloween"] .ml-10{--c:#f97316;--ring:#ffedd5;--r:-3deg}
+[data-style="halloween"] .ml-11{--c:#f5f0e1;--ring:#1c1917;color:#1c1917;border-color:#0c0613;--r:6deg}
+[data-style="halloween"] .ml-12{--c:#84cc16;--ring:#1c1917;--r:-5deg}
+/* The O is a jack-o'-lantern: an inline SVG in the O patch (index.html) with ribbed, squat lobes, a dark edge,
+   a curly stem with a leaf, and a carved face lit from inside. It stays the island and the stop control. The same SVG
+   holds the witch's cauldron, which page.js crossfades in now and then. Other styles hide the SVG. */
+.mom-jack{display:none}
+[data-style="halloween"] .mom-title .ml-6{--jk-hi:#fdba74;--jk-mid:#f97316;--jk-lo:#c2410c;--jk-hot:#fffbe0;--jk-warm:#fde047;--jk-deep:#f59e0b;--r:6deg;
+ width:2.1em;height:1.72em;background:none;border-color:transparent;box-shadow:none;outline:none;color:transparent;-webkit-text-stroke:0;text-shadow:none}
+[data-style="halloween"] .mom-jack{display:block;position:absolute;left:-.12em;top:-.35em;width:2.34em;height:2.15em;overflow:visible;pointer-events:none}
+.mom-jack :is(.jk-pumpkin,.jk-pot){transform-box:view-box;transform-origin:60px 100px}
+.mom-jack .jk-pot{opacity:0}
+.jk-edge ellipse{fill:none;stroke:var(--edge);stroke-width:8}
+.jk-ring ellipse{fill:none;stroke:#fed7aa;stroke-width:3.6}
+.jk-body ellipse{fill:url(#jk-skin);stroke:#9a3412;stroke-width:1.6}
+.jk-rib{fill:none;stroke:#9a3412;stroke-opacity:.5;stroke-width:1.6;stroke-linecap:round}
+.jk-stem{fill:#4d7c0f;stroke:var(--edge);stroke-width:2;stroke-linejoin:round}
+.jk-curl{fill:none;stroke:#65a30d;stroke-width:2.2;stroke-linecap:round}
+.jk-leaf{fill:#65a30d;stroke:var(--edge);stroke-width:1.8;stroke-linejoin:round}
+.jk-carve{fill:url(#jk-candle);stroke:#7c2d12;stroke-width:1.6;stroke-linejoin:round}
+.jk-glow{fill:var(--jk-warm);filter:url(#jk-blur);opacity:.85}
+.jk-steam{fill:none;stroke:#d9f99d;stroke-width:2.4;stroke-linecap:round;opacity:0}
+.jk-legs{fill:#0c0a09}
+.jk-belly{fill:url(#jk-iron);stroke:var(--edge);stroke-width:2.6}
+.jk-shine{fill:none;stroke:#78716c;stroke-width:2.2;stroke-linecap:round;opacity:.7}
+.jk-pot-band{fill:none;stroke:#a8a29e;stroke-opacity:.5;stroke-width:1.2}
+.jk-rim{fill:#292524;stroke:var(--edge);stroke-width:2.4}
+.jk-brew{fill:url(#jk-brew)}
+.jk-bubbles circle{fill:#bef264;stroke:#3f6212;stroke-width:1;opacity:0;transform-box:fill-box;transform-origin:center}
+[data-style="halloween"] .mom-title .ml-6.is-brew{filter:drop-shadow(0 0 .3em #84cc16aa)}
+[data-style="halloween"] .mom-title .mom-o.is-island{--jk-hot:#ffffff;--jk-warm:#fef08a;filter:drop-shadow(0 0 .28em #fb923c) drop-shadow(0 0 .1em #fde047)}
+[data-style="halloween"] .mom-title .ml-6.is-rec{--jk-hi:#fb923c;--jk-mid:#ea580c;--jk-lo:#7f1d1d;--jk-hot:#fff1f0;--jk-warm:#f87171;--jk-deep:#dc2626;filter:drop-shadow(0 0 .3em #ef4444) drop-shadow(0 0 .08em #fca5a5)}
+[data-style="halloween"] .mom-title .ml-6[role="button"]:focus-visible{outline:2px solid #fff;outline-offset:.1em;border-radius:50%;box-shadow:0 0 0 calc(.1em + 4px) #dc2626}
+[data-style="halloween"] .mom-plain .mom-o.is-island{color:#ea580c}
+.mom-bat{position:absolute;left:0;top:0;z-index:5;width:56px;height:28px;margin:-14px 0 0 -28px;pointer-events:none;opacity:0;display:none}
+.mom-bat svg{display:block;width:100%;height:100%;filter:drop-shadow(0 0 1px #fed7aa) drop-shadow(0 0 5px #f97316) drop-shadow(0 0 12px #f9731688)}
+.mom-bat path{fill:#140a1f}
+/* The witch: a broom-riding silhouette with the same orange rim light, and a short sparkle trail. page.js flies both. */
+.mom-witch{position:absolute;left:0;top:0;z-index:5;width:80px;height:62px;margin:-31px 0 0 -40px;pointer-events:none;opacity:0;display:none}
+.mom-witch svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 1px #d9f99d) drop-shadow(0 0 5px #84cc16) drop-shadow(0 0 11px #f9731680)}
+.mw-body{fill:#140a1f}
+.mw-broom{fill:none;stroke:#3b2415;stroke-width:2.6;stroke-linecap:round}
+.mw-bristle{fill:#b45309;stroke:#140a1f;stroke-width:1}
+.mom-sparks{position:absolute;left:0;top:0;z-index:4;width:0;height:0;pointer-events:none;display:none}
+.mom-sparks b{position:absolute;left:-5px;top:-5px;width:10px;height:10px;opacity:0;background:#fde047;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 3px #a3e635)}
+.mom-sparks b:nth-child(even){background:#bef264}
+[data-style="halloween"] :is(.mom-bat,.mom-witch,.mom-sparks){display:block}
+@media (prefers-reduced-motion:no-preference){
+  [data-style="halloween"] .mom-bat.is-flying svg{animation:mom-bat-flap .16s ease-in-out infinite alternate}
+  [data-style="halloween"] .mom-witch.is-flying .mw-body{animation:mom-witch-bob .5s ease-in-out infinite alternate}
+  [data-style="halloween"] .ml-6.is-brew .jk-bubbles circle{animation:mom-brew-bubble 1s ease-in infinite}
+  [data-style="halloween"] .ml-6.is-brew .jk-bubbles circle:nth-child(2){animation-delay:-.35s}
+  [data-style="halloween"] .ml-6.is-brew .jk-bubbles circle:nth-child(3){animation-delay:-.7s}
+  [data-style="halloween"] .ml-6.is-brew .jk-bubbles circle:nth-child(4){animation-delay:-.2s;animation-duration:.8s}
+  [data-style="halloween"] .ml-6.is-brew .jk-bubbles circle:nth-child(5){animation-delay:-.55s;animation-duration:.9s}
+  [data-style="halloween"] .ml-6.is-brew .jk-steam{animation:mom-steam 1.4s ease-out infinite}
+  .ml.idle-wobble{--idle:mom-idle-wobble .9s ease-in-out}
+  .ml.idle-flicker{--idle:mom-idle-flicker 1.4s steps(12,jump-none)}
+  [data-style="halloween"] .mom-title.is-played .ml-6:not(.is-island,.is-release,.is-rec,.is-idle,.is-brew) .jk-glow{animation:mom-pumpkin-glow 3.6s ease-in-out infinite}
+  [data-style="halloween"] .mom-title .mom-o.is-island .jk-glow{animation:mom-candle 1.1s steps(6,jump-none) infinite}
+  [data-style="halloween"] .mom-title .ml-6.is-rec{animation:mom-jack-rec 1.5s ease-in-out infinite}
+}
+@keyframes mom-bat-flap{0%{transform:scaleY(1)}100%{transform:scaleY(.45)}}
+@keyframes mom-witch-bob{0%{transform:translateY(-1px) rotate(-2deg)}100%{transform:translateY(1.5px) rotate(2deg)}}
+@keyframes mom-brew-bubble{0%{opacity:0;transform:translateY(2px) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translateY(-16px) scale(1.1)}}
+@keyframes mom-steam{0%{opacity:0;transform:translateY(6px)}40%{opacity:.55}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes mom-candle{0%,100%{opacity:.85}20%{opacity:1}35%{opacity:.6}55%{opacity:1}75%{opacity:.75}}
+@keyframes mom-jack-rec{0%,100%{transform:rotate(var(--r)) scale(1);filter:drop-shadow(0 0 .2em #ef4444) drop-shadow(0 0 .06em #fca5a5)}
+ 50%{transform:rotate(var(--r)) scale(1.07);filter:drop-shadow(0 0 .45em #ef4444) drop-shadow(0 0 .12em #fecaca)}}
+@keyframes mom-idle-wobble{0%,100%{transform:rotate(var(--r))}20%{transform:rotate(calc(var(--r) - 7deg)) skewX(7deg)}45%{transform:translateY(-.08em) rotate(calc(var(--r) + 6deg)) skewX(-6deg)}70%{transform:rotate(calc(var(--r) - 3deg)) skewX(3deg)}}
+/* A candle guttering inside the pumpkin: bright flares and dips, with a warm halo. */
+@keyframes mom-idle-flicker{
+  0%,100%{transform:rotate(var(--r));filter:none;text-shadow:0 0 .18em #facc15}
+  8%{filter:brightness(1.45) drop-shadow(0 0 .4em #fb923c);text-shadow:0 0 .45em #fde047,0 0 .12em #fff}
+  16%{filter:brightness(.7);text-shadow:0 0 .06em #facc1599}
+  26%{filter:brightness(1.55) drop-shadow(0 0 .55em #f97316);text-shadow:0 0 .55em #fde047,0 0 .15em #fff}
+  36%{filter:brightness(.82);text-shadow:0 0 .1em #facc15}
+  48%{transform:rotate(calc(var(--r) - 3deg));filter:brightness(1.35) drop-shadow(0 0 .45em #fb923c);text-shadow:0 0 .4em #fde047}
+  62%{filter:brightness(.9)}
+  76%{filter:brightness(1.25) drop-shadow(0 0 .3em #fb923c);text-shadow:0 0 .3em #fde047}}
+@keyframes mom-pumpkin-glow{0%,100%{opacity:.7}50%{opacity:1}}
+
+/* The fun stat in the i popover. */
+.mom-info-pop .mom-info-count{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:13.5px;font-weight:700;color:#5b21b6}
+.mom-info-pop .mom-info-count[hidden]{display:none}
+.mom-info-pop .mom-info-count::before{content:"";flex:none;width:14px;height:16px;background:currentColor;opacity:.85;-webkit-mask:linear-gradient(#000 0 0) top/100% 78% no-repeat,conic-gradient(from -45deg at 50% 100%,#000 90deg,#0000 0) bottom/5px 4px repeat-x;mask:linear-gradient(#000 0 0) top/100% 78% no-repeat,conic-gradient(from -45deg at 50% 100%,#000 90deg,#0000 0) bottom/5px 4px repeat-x}
+[data-style="halloween"] .mom-info-pop .mom-info-count{font:700 13px/1.2 var(--display);letter-spacing:.05em;text-transform:uppercase}
+[data-style="halloween"][data-theme="dark"] .mom-info-pop .mom-info-count{color:#fdba74}
+
+/* Halloween Light: a pale parchment page with orange and purple accents, burnt-orange edges and darker orange for
+   text so it stays readable. The heading, pumpkin, bat and witch are shared with Halloween Dark. */
+[data-style="halloween"][data-theme="light"]{--bg:#f7ecd8;--panel:#fffaf0;--ink:#2a1433;--muted:#664655;--line:#e7d2ae;--line-strong:#d4b487;--accent:#c2410c;--amethyst:#7e22ce;
+ --edge-soft:#7c2d1259;--focus:0 0 0 3px #ea580c55}
+[data-style="halloween"][data-theme="light"] body{background:radial-gradient(900px 420px at 50% -100px,#fdba7470 0,transparent 70%),radial-gradient(700px 380px at 90% 105%,#c084fc33 0,transparent 70%),radial-gradient(600px 320px at 0% 70%,#84cc1624 0,transparent 70%),var(--bg)}
+[data-style="halloween"][data-theme="light"] :is(.mom-form,.mom-pick-pop,.mom-info-pop,.mom-style-menu){box-shadow:0 5px 0 var(--edge-soft),0 0 0 1px #ea580c14,0 24px 48px -20px #7c2d1255}
+[data-style="halloween"][data-theme="light"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn,.mom-native){background-color:#fffdf8;color:var(--ink)}
+[data-style="halloween"][data-theme="light"] :is(.mom-field input:not(#mom-repo-filter):focus,.mom-pick-btn:focus-visible,.mom-pick.is-open .mom-pick-btn,.mom-native:focus-visible){border-color:#ea580c;box-shadow:0 0 0 3px #ea580c33;background-color:#fff}
+[data-style="halloween"][data-theme="light"] :is(#mom-login,.mom-pick-search input)::placeholder{color:#8a6772}
+[data-style="halloween"][data-theme="light"] .mom-pick-search:focus-within{border-bottom-color:#ea580c;color:#c2410c}
+[data-style="halloween"][data-theme="light"] .mom-pick-opt[aria-selected="true"]{color:#9a3412}
+[data-style="halloween"][data-theme="light"] .mom-pick-opt.is-active,[data-style="halloween"][data-theme="light"] .mom-sm-item:is(:hover,:focus-visible){background:#ffedd5;box-shadow:inset 0 0 0 2px #ea580c}
+[data-style="halloween"][data-theme="light"] .mom-pick-list{scrollbar-color:#fdba74 transparent}
+[data-style="halloween"][data-theme="light"] .mom-style:hover{background:#f973161a}
+[data-style="halloween"][data-theme="light"] .mom-style:is(#mom-style[aria-expanded="true"],#mom-music[aria-pressed="true"],.mom-info-btn[aria-expanded="true"]){background:#ffedd5;color:#9a3412;border-color:#ea580c}
+[data-style="halloween"][data-theme="light"] .mom-info-title{color:#6b21a8}
+[data-style="halloween"][data-theme="light"] .mom-meter{background:#f973160f;border-color:#ea580c47}
+[data-style="halloween"][data-theme="light"] .mom-meter-bar{background:#7c2d121a}
+[data-style="halloween"][data-theme="light"] .mom-meter-bar i{background:linear-gradient(90deg,#7e22ce,#ea580c)}
+[data-style="halloween"][data-theme="light"] .mom-info-pop .mom-info-credit{color:#735361}
+[data-style="halloween"][data-theme="light"] .mom-info-pop .mom-info-count{color:#9a3412}
+[data-style="halloween"][data-theme="light"] :is(.mom-pick-check,.mom-sm-check){color:#c2410c}
+[data-style="halloween"][data-theme="light"] .receipt-stage[data-chrome="kit"] .receipt-seg button:hover,[data-style="halloween"][data-theme="light"] .receipt-dialog-x:hover{background:#f973161a}
+[data-style="halloween"][data-theme="light"] .receipt-stage[data-chrome="kit"] .receipt-seg .count{background:#65a30d26;color:#3f6212}
+[data-style="halloween"][data-theme="light"] .receipt-dialog .rcd-btn.is-primary{background:linear-gradient(135deg,#ea580c,#c2410c 55%,#9a3412);border-color:#7c2d12;box-shadow:0 3px 0 #7c2d12}
+[data-style="halloween"][data-theme="light"] .rm-machine{box-shadow:inset 0 2px 0 #ffffff55,inset 0 -8px 14px #1a063d88,0 22px 34px -16px #4c1d9580,0 0 44px -12px #f9731666}
+
+/* Crayon: cream ruled paper by day, a green chalkboard by night. Each heading letter is its own crayon, a little
+   crooked; labels, buttons and menus are handwritten in system faces with wobbly borders and a hard crayon shadow.
+   Body text and numbers keep the regular face. The receipt paper and the machine keep their own colours. */
+.mom-doodles{display:none}
+[data-style="crayon"]{--hand:"Chalkboard SE","Marker Felt","Comic Sans MS","Segoe Print","Bradley Hand",cursive;
+ --bg:#fbf6e9;--panel:#fffdf6;--ink:#2b2a4c;--muted:#56536f;--line:#d6c6a3;--accent:#2457c5;--focus:0 0 0 3px #2f6fdf55;
+ --cr-red:#e63946;--cr-orange:#f77f00;--cr-gold:#d99a00;--cr-yellow:#f2b705;--cr-green:#2a9d4b;--cr-blue:#2f6fdf;--cr-purple:#8e44ad;
+ --cr-line:#3a3358b8;--cr-shadow:#3a33583d;--cr-wobble:20px 7px 18px 9px/8px 18px 9px 20px;--cr-wobble-sm:14px 5px 12px 6px/6px 12px 5px 14px;
+ --cr-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .15 .07 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+[data-style="crayon"][data-theme="dark"]{--bg:#1c3a2f;--panel:#24473a;--ink:#f4f1e6;--muted:#c5d6cc;--line:#5d7d6e;--accent:#f7e07a;--focus:0 0 0 3px #9ad0f580;
+ --cr-red:#f6a5b4;--cr-orange:#f9be85;--cr-gold:#f7e07a;--cr-yellow:#f7e07a;--cr-green:#a8e6a3;--cr-blue:#9ad0f5;--cr-purple:#cbb0f5;
+ --cr-line:#f4f1e69e;--cr-shadow:#0d211a;
+ --cr-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .16 -.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+[data-style="crayon"] body{background:var(--cr-grain),linear-gradient(90deg,transparent 54px,#e6394630 54px 56px,transparent 56px),repeating-linear-gradient(180deg,transparent 0 31px,#6f9fd62e 31px 32px),var(--bg);background-attachment:fixed}
+[data-style="crayon"][data-theme="dark"] body{background:var(--cr-grain),radial-gradient(42% 26% at 16% 24%,#ffffff14,transparent 70%),radial-gradient(36% 20% at 74% 62%,#ffffff10,transparent 72%),
+ radial-gradient(28% 14% at 58% 10%,#ffffff0c,transparent 70%),linear-gradient(168deg,transparent 30%,#ffffff0a 36%,transparent 41%,transparent 58%,#ffffff08 63%,transparent 68%),radial-gradient(120% 90% at 50% 40%,transparent 60%,#0b1c1566),var(--bg);background-attachment:fixed}
+[data-style="crayon"][data-theme="dark"] body::after{content:"";position:fixed;inset:0;z-index:50;pointer-events:none;border:8px solid #8b5a2b;border-image:repeating-linear-gradient(90deg,#9a6533 0 7px,#8a5829 7px 11px,#a8723d 11px 19px,#7d4f24 19px 22px) 8;box-shadow:inset 0 0 0 1px #5e3a1a,inset 0 0 22px #00000059}
+
+/* The heading: crayon letters instead of tiles */
+[data-style="crayon"] .mom-intro h1.mom-title{--edge:transparent;font:700 clamp(24px,5.4vw,50px)/1.05 var(--hand);padding:4px 0 14px}
+[data-style="crayon"] .ml{--c:var(--cr-red);width:auto;height:auto;margin-left:.04em;padding:0 .01em;color:var(--c);background:none;border:0;border-radius:0;box-shadow:none;clip-path:none;-webkit-text-stroke:0;text-shadow:.05em .06em 0 var(--cr-shadow)}
+[data-style="crayon"] .ml:first-child{margin-left:0}
+[data-style="crayon"] .mom-word{column-gap:.04em}
+[data-style="crayon"][data-theme="dark"] .ml{text-shadow:0 0 .03em currentColor,.05em .06em 0 var(--cr-shadow)}
+[data-style="crayon"] .ml-0{--c:var(--cr-red);--r:-8deg}
+[data-style="crayon"] .ml-1{--c:var(--cr-orange);--r:5deg}
+[data-style="crayon"] .ml-2{--c:var(--cr-gold);--r:-3deg}
+[data-style="crayon"] .ml-3{--c:var(--cr-green);--r:7deg}
+[data-style="crayon"] .ml-4{--c:var(--cr-blue);--r:-5deg}
+[data-style="crayon"] .ml-6{--c:var(--cr-purple);--r:6deg}
+[data-style="crayon"] .ml-8{--c:var(--cr-red);--r:-6deg}
+[data-style="crayon"] .ml-9{--c:var(--cr-orange);--r:4deg}
+[data-style="crayon"] .ml-10{--c:var(--cr-gold);--r:-7deg}
+[data-style="crayon"] .ml-11{--c:var(--cr-green);--r:5deg}
+[data-style="crayon"] .ml-12{--c:var(--cr-blue);--r:-4deg}
+[data-style="crayon"] .ml-dash{width:.42em;height:.13em;margin:0 .08em;border-radius:.1em;background:var(--cr-purple);box-shadow:.03em .05em 0 var(--cr-shadow)}
+[data-style="crayon"] .ml-7{background:var(--cr-green)}
+[data-style="crayon"] .ml-6.is-rec{--c:#e11d48;box-shadow:none;text-shadow:0 0 .2em #ef4444aa}
+[data-style="crayon"] .ml-6[role="button"]:focus-visible{box-shadow:none;outline:2px solid var(--cr-blue);outline-offset:.08em;border-radius:.2em}
+[data-style="crayon"] .mom-o.is-island{filter:drop-shadow(0 0 .2em #f2b705aa)}
+@media (prefers-reduced-motion:no-preference){
+ [data-style="crayon"] .ml-6.is-rec{animation:mom-crayon-rec 1.5s ease-in-out infinite}
+}
+@keyframes mom-crayon-rec{0%,100%{transform:rotate(var(--r)) scale(1);text-shadow:0 0 .15em #ef444480}50%{transform:rotate(var(--r)) scale(1.1);text-shadow:0 0 .4em #ef4444cc}}
+
+/* Controls, the form card and the menus */
+[data-style="crayon"] .mom-style{border:2px solid var(--cr-line);border-radius:var(--cr-wobble-sm);background:var(--panel);box-shadow:3px 3px 0 var(--cr-shadow);transition:transform .12s,box-shadow .12s,background .15s}
+[data-style="crayon"] .mom-style:hover{transform:translate(-1px,-1px) rotate(-2deg);box-shadow:4px 4px 0 var(--cr-shadow)}
+[data-style="crayon"] .mom-style:is(#mom-style[aria-expanded="true"],#mom-music[aria-pressed="true"],.mom-info-btn[aria-expanded="true"]){background:#e8f5ec;color:#17703c;border-color:#17703c}
+[data-style="crayon"] .mom-form{border:2.5px solid var(--cr-line);border-radius:var(--cr-wobble);box-shadow:5px 6px 0 var(--cr-shadow);padding:18px}
+[data-style="crayon"] .mom-field>span{font:700 14px/1.2 var(--hand);letter-spacing:.01em;color:var(--ink)}
+[data-style="crayon"] .mom-try{font-family:var(--hand);text-decoration:underline wavy var(--cr-orange);text-decoration-thickness:1.5px}
+[data-style="crayon"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn,.mom-native){border:2px solid var(--cr-line);border-radius:var(--cr-wobble-sm);background-color:#fffefa}
+[data-style="crayon"] :is(.mom-field input:not(#mom-repo-filter):focus,.mom-pick-btn:focus-visible,.mom-pick.is-open .mom-pick-btn,.mom-native:focus-visible){border-color:var(--cr-blue);box-shadow:0 0 0 3px #2f6fdf33}
+[data-style="crayon"] :is(.mom-pick-pop,.mom-info-pop,.mom-style-menu){border:2px solid var(--cr-line);border-radius:var(--cr-wobble);box-shadow:5px 6px 0 var(--cr-shadow)}
+[data-style="crayon"] :is(.mom-pick-opt,.mom-sm-item){border-radius:var(--cr-wobble-sm)}
+[data-style="crayon"] :is(.mom-pick-opt.is-active,.mom-sm-item:hover,.mom-sm-item:focus-visible){background:#fdf0b8;box-shadow:inset 0 0 0 2px var(--cr-blue)}
+[data-style="crayon"] :is(.mom-pick-check,.mom-sm-check){color:#17703c}
+[data-style="crayon"] .mom-sm-name{font:700 15px/1.2 var(--hand)}
+[data-style="crayon"] .mom-sm-label{font:700 12px/1.3 var(--hand);text-transform:none;letter-spacing:.02em}
+[data-style="crayon"] .mom-sm-sep{border-top:2px solid transparent;border-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6'%3E%3Cpath d='M0 3q6-3 12 0t12 0' fill='none' stroke='%238e44ad' stroke-width='1.6'/%3E%3C/svg%3E") 0 0 100% 0/0 0 6px 0 round}
+[data-style="crayon"] .mom-info-title{font:700 18px/1.2 var(--hand);text-decoration:underline wavy var(--cr-red);text-decoration-thickness:1.5px;text-underline-offset:.25em}
+[data-style="crayon"] .mom-info-pop .mom-info-count{color:#17703c}
+[data-style="crayon"] .mom-meter{background:#2f6fdf0f;border:2px solid #2f6fdf40;border-radius:var(--cr-wobble-sm)}
+[data-style="crayon"] .mom-meter-bar i{background:repeating-linear-gradient(-45deg,#ffffff40 0 2px,transparent 2px 6px),linear-gradient(90deg,var(--cr-green),var(--cr-blue))}
+[data-style="crayon"] .mom-badge{font-family:var(--hand);border-radius:var(--cr-wobble-sm)}
+[data-style="crayon"] .receipt-stage[data-chrome="kit"] .receipt-seg{border:2px solid var(--cr-line);border-radius:var(--cr-wobble-sm);box-shadow:3px 3px 0 var(--cr-shadow)}
+[data-style="crayon"] .receipt-stage[data-chrome="kit"] .receipt-seg button{font-family:var(--hand);font-weight:700;font-size:14px;border-radius:var(--cr-wobble-sm)}
+[data-style="crayon"] .receipt-stage[data-chrome="kit"] .receipt-seg button[aria-pressed="true"]{background:repeating-linear-gradient(-45deg,#ffffff2e 0 2px,transparent 2px 6px),var(--rk-accent)}
+[data-style="crayon"] .receipt-seg .count{font-family:var(--sans)}
+[data-style="crayon"] .receipt-stage[data-chrome="kit"] .receipt-btn:not(.is-on),[data-style="crayon"] .receipt-dialog .rcd-btn{border:2px solid var(--cr-line);border-radius:var(--cr-wobble-sm);font-family:var(--hand);font-weight:700;box-shadow:3px 3px 0 var(--cr-shadow)}
+[data-style="crayon"] .receipt-dialog .rcd-btn.is-primary{background:repeating-linear-gradient(-45deg,#ffffff2e 0 2px,transparent 2px 6px),var(--rk-accent);border-color:#172f73}
+[data-style="crayon"] :is(.receipt-btn,.rcd-btn):disabled{box-shadow:none}
+[data-style="crayon"] .receipt-dialog .rcd-head h2{font:700 20px/1.25 var(--hand)}
+[data-style="crayon"] .receipt-stage[data-chrome="kit"] .rc-years{border:2px solid var(--cr-line);border-radius:var(--cr-wobble);box-shadow:4px 5px 0 var(--cr-shadow)}
+[data-style="crayon"] .mom-receipt{--mom-bar-h:40px}
+[data-style="crayon"] .rm-machine{box-shadow:inset 0 2px 0 #ffffff55,inset 0 -8px 14px #1a063d88,7px 8px 0 var(--cr-shadow)}
+[data-style="crayon"][data-theme="dark"] :is(.mom-field input:not(#mom-repo-filter),.mom-field select,.mom-pick-btn,.mom-native){background-color:#1f4034;color:var(--ink)}
+[data-style="crayon"][data-theme="dark"] :is(.mom-field input:not(#mom-repo-filter):focus,.mom-pick-btn:focus-visible,.mom-pick.is-open .mom-pick-btn,.mom-native:focus-visible){background-color:#224537;border-color:var(--cr-blue);box-shadow:0 0 0 3px #9ad0f540}
+[data-style="crayon"][data-theme="dark"] :is(#mom-login,.mom-pick-search input)::placeholder{color:#a9bdb2}
+[data-style="crayon"][data-theme="dark"] :is(.mom-pick-opt.is-active,.mom-sm-item:hover,.mom-sm-item:focus-visible){background:#ffffff14;box-shadow:inset 0 0 0 2px var(--cr-blue)}
+[data-style="crayon"][data-theme="dark"] :is(.mom-pick-check,.mom-sm-check),[data-style="crayon"][data-theme="dark"] .mom-info-pop .mom-info-count{color:var(--cr-green)}
+[data-style="crayon"][data-theme="dark"] .mom-style:is(#mom-style[aria-expanded="true"],#mom-music[aria-pressed="true"],.mom-info-btn[aria-expanded="true"]){background:#2c5546;color:var(--cr-green);border-color:var(--cr-green)}
+[data-style="crayon"][data-theme="dark"] .mom-style:hover{background:#2c5546}
+[data-style="crayon"][data-theme="dark"] .mom-info-title{color:var(--ink)}
+[data-style="crayon"][data-theme="dark"] .mom-info-pop .mom-info-credit{color:#a9bdb2}
+[data-style="crayon"][data-theme="dark"] .mom-meter{background:#9ad0f512;border-color:#9ad0f540}
+[data-style="crayon"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button[aria-pressed="true"],[data-style="crayon"][data-theme="dark"] .receipt-dialog .rcd-btn.is-primary{color:#12261e;background:repeating-linear-gradient(-45deg,#1c3a2f24 0 2px,transparent 2px 6px),var(--rk-accent);border-color:var(--ink)}
+[data-style="crayon"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button[aria-pressed="true"] .count{background:#12261e1f;color:#12261e}
+[data-style="crayon"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg button:hover,[data-style="crayon"][data-theme="dark"] .receipt-dialog-x:hover{background:#ffffff14}
+[data-style="crayon"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .receipt-seg .count{background:#a8e6a326;color:#a8e6a3}
+[data-style="crayon"][data-theme="dark"] .receipt-stage[data-chrome="kit"] .rc-years button[aria-selected="true"]{background:#f7e07a33}
+[data-style="crayon"][data-theme="dark"] .rm-machine{box-shadow:inset 0 2px 0 #ffffff55,inset 0 -8px 14px #1a063d88,7px 8px 0 #0d211a}
+
+/* Doodles behind the page: bunting, a drifting cloud, corner drawings and a snail */
+[data-style="crayon"] .mom-doodles{display:block}
+.mom-doodles>*{position:fixed;z-index:-1;pointer-events:none}
+.mom-doodles svg{overflow:visible}
+.md-bunting{position:absolute;top:0;left:0;right:0;height:30px;display:flex;justify-content:space-between;padding:0 10px;overflow:hidden}
+.md-bunting::before{content:"";position:absolute;left:0;right:0;top:2px;height:2px;border-radius:2px;background:var(--cr-line)}
+.md-bunting i{--f:var(--cr-red);flex:none;width:20px;height:22px;margin-top:3px;background:repeating-linear-gradient(-45deg,#ffffff40 0 2px,transparent 2px 5px),var(--f);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0}
+.md-bunting i:nth-child(6n+2){--f:var(--cr-orange)}
+.md-bunting i:nth-child(6n+3){--f:var(--cr-yellow)}
+.md-bunting i:nth-child(6n+4){--f:var(--cr-green)}
+.md-bunting i:nth-child(6n+5){--f:var(--cr-blue)}
+.md-bunting i:nth-child(6n){--f:var(--cr-purple)}
+.md-cloud{top:70px;left:0;width:110px;opacity:.85;transform:translateX(-160px)}
+.md-cloud path{fill:var(--panel);stroke:var(--cr-blue);stroke-width:2.6;stroke-linejoin:round}
+[data-theme="dark"] .md-cloud path{fill:#ffffff10;stroke:#f4f1e6b3}
+.md-doodle{opacity:.8}
+[data-theme="dark"] .md-doodle{opacity:.6}
+.md-doodle path{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+:is(.md-heart,.md-star) path{fill:currentColor;fill-opacity:.22}
+.mc-red{color:var(--cr-red)}.mc-orange{color:var(--cr-orange)}.mc-yellow{color:var(--cr-yellow)}.mc-green{color:var(--cr-green)}.mc-blue{color:var(--cr-blue)}.mc-purple{color:var(--cr-purple)}
+.md-rainbow{top:56px;left:22px;width:120px}
+.md-spiral{top:46vh;right:26px;width:48px}
+.md-heart{bottom:110px;left:26px;width:42px}
+.md-star{top:30vh;left:34px;width:46px}
+.md-snail-track{left:0;right:0;bottom:12px;height:34px;overflow:hidden}
+.md-snail{position:absolute;left:0;bottom:0;width:52px;transform:translateX(18vw)}
+.md-snail path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.md-snail-body{stroke:var(--cr-green);stroke-width:4}
+.md-snail-eyes{stroke:var(--cr-green);stroke-width:2}
+.md-snail circle{fill:var(--ink)}
+.md-snail .md-snail-shell{stroke:var(--cr-orange);stroke-width:3.4;fill:var(--cr-yellow);fill-opacity:.35}
+@media (prefers-reduced-motion:no-preference){
+ .md-bunting i{animation:mom-sway 2.8s ease-in-out infinite alternate}
+ .md-bunting i:nth-child(odd){animation-delay:-1.4s}
+ .md-bunting i:nth-child(3n){animation-duration:3.4s}
+ .md-cloud{animation:mom-drift 150s linear -40s infinite}
+ .md-heart{animation:mom-bob 3.6s ease-in-out infinite alternate}
+ .md-star{animation:mom-twinkle 3s ease-in-out infinite alternate}
+ .md-snail{animation:mom-crawl 240s linear -30s infinite}
+}
+@keyframes mom-sway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@keyframes mom-drift{from{transform:translateX(-160px)}to{transform:translateX(calc(100vw + 40px))}}
+@keyframes mom-bob{from{transform:translateY(-4px) rotate(-6deg)}to{transform:translateY(4px) rotate(5deg)}}
+@keyframes mom-twinkle{from{opacity:.5;transform:scale(.85) rotate(-6deg)}to{opacity:.9;transform:scale(1.08) rotate(6deg)}}
+@keyframes mom-crawl{from{transform:translateX(-70px)}to{transform:translateX(calc(100vw + 20px))}}
+@media (max-width:900px){.mom-doodles :is(.md-doodle,.md-cloud){display:none}}
+@media (max-width:640px){.md-snail-track{display:none}.md-bunting i{width:14px;height:16px}}
+@media (forced-colors:active){[data-style="crayon"] .mom-doodles,[data-style="crayon"][data-theme="dark"] body::after{display:none}}
+@media print{.mom-doodles{display:none!important}}

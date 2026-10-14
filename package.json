@@ -1,0 +1,16 @@
+{
+  "name": "merge-o-matic",
+  "version": "1.0.0",
+  "description": "Print a receipt of a GitHub user's merged pull requests in one public repository.",
+  "license": "MIT",
+  "author": "Deepak Jain",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node --test test/"
+  }
+}

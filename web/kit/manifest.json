@@ -1,0 +1,6 @@
+{
+  "name": "merge-o-matic",
+  "version": "1.0.0",
+  "entry": "receipt-ui.js",
+  "files": ["receipt-ui.js", "receipt.js", "receipt-video.js", "receipt-recorder.js", "receipt.css"]
+}
