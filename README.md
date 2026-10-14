@@ -40,25 +40,36 @@ Every line comes from GitHub's public data for that user and repository.
 
 ## Run it
 
-Requires Node.js 20 or later. There are no dependencies to install.
+Requires Node.js 20 or later. There's nothing to install or build: no dependencies and no build step.
+
+**1. Get the code.**
 
 ```sh
 git clone https://github.com/deepujain/merge-o-matic.git
 cd merge-o-matic
-GITHUB_PUBLIC_READ_TOKEN=github_pat_... npm start
 ```
 
-Then open http://localhost:8040.
+**2. Create a GitHub token.** Open [GitHub › Settings › Developer settings › Fine-grained tokens](https://github.com/settings/personal-access-tokens/new), give the token a name and an expiry, set **Repository access** to **Public repositories (read-only)**, add no other permissions, and click **Generate token**. Copy it; it starts with `github_pat_`. For public repositories in an organization that enforces SAML SSO, also choose **Configure SSO** on the token and authorize it for that organization.
 
-Without a key, the page prints clearly labelled demo data (`DEMO DATA. NOT FROM GITHUB.`), so you can try it right away. For real receipts, create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with **Public repositories (read-only)** access and nothing else. To read public repositories in an organization that enforces SAML SSO, authorize the token for that organization.
+**3. Start the server with your token.**
+
+```sh
+GITHUB_PUBLIC_READ_TOKEN=github_pat_your_token npm start
+```
+
+It prints `Merge-O-Matic on http://localhost:8040 (live GitHub data)`.
+
+**4. Print your receipt.** Open http://localhost:8040, type **your own GitHub username** (or anyone's), pick one of the public repositories they've merged into, choose a range, and press **PRINT**.
+
+Skip step 2 and run plain `npm start` to try it without a token: it prints receipts marked `DEMO DATA. NOT FROM GITHUB.`
 
 | Variable | Default | What it does |
 |---|---|---|
-| `GITHUB_PUBLIC_READ_TOKEN` | none | The GitHub key for live data. It stays on the server. |
-| `PORT` | `8040` | The port to listen on. |
-| `NODE_ENV` | none | Set to `production` to turn off demo data: without a key, the page says lookups are resting instead. |
+| `GITHUB_PUBLIC_READ_TOKEN` | none | Your GitHub token, for live data. It stays on the server and never reaches the browser. |
+| `PORT` | `8040` | The port to listen on, such as `PORT=3000 npm start`. |
+| `NODE_ENV` | none | Set to `production` to turn off demo data: without a token, the page says lookups are resting instead. |
 | `TRUST_PROXY` | off | Set to `1` behind a load balancer, so rate limits use the client address from `X-Forwarded-For`. |
-| `MOM_SKIP_LOGINS` | none | Comma-separated GitHub logins whose test prints aren't counted, such as your own. |
+| `MOM_SKIP_LOGINS` | none | Comma-separated GitHub usernames whose test prints aren't counted, such as your own. |
 
 ```sh
 npm test    # 82 tests: the receipt, printer, recorder, music, styles, and the server
