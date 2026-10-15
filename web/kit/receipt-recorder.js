@@ -1,8 +1,7 @@
-// Records the receipt machine as a video: a canvas the page draws itself (receipt-video.js), plus the machine's
-// own synthesized audio (never the microphone or system sound). There is no screen capture and no share prompt.
-// Nothing leaves the browser; onDone gets the file. Browser APIs come in through `env` so the state machine runs
-// under test with fakes.
-export const REC_CAP_MS=90000,REC_TAIL_MS=2000,REC_PRESS_MS=2000;
+// Records a video: either the machine, from a canvas the page draws itself (receipt-video.js) with the machine's own
+// synthesized audio, or the whole page, from a tab capture the visitor shares. Never the microphone. Nothing leaves
+// the browser; onDone gets the file. Browser APIs come in through `env` so the state machine runs under test with fakes.
+export const REC_CAP_MS=90000,REC_PAGE_CAP_MS=300000,REC_TAIL_MS=2000,REC_PRESS_MS=2000;
 // Chrome only accepts the MP4 pair with an explicit AAC profile (mp4a.40.2).
 export const REC_TYPES=['video/mp4;codecs=avc1,mp4a','video/mp4;codecs=avc1,mp4a.40.2','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
 
@@ -29,7 +28,7 @@ export function recordingBitrate({width=0,height=0,fps=REC_FPS}={}){
 // state: idle, armed (recording, waiting for PRINT), rolling (printing), ending (torn off; stops REC_TAIL_MS
 // later) and saving.
 export function createRecorder({env,now=()=>Date.now(),timers=globalThis,onChange=()=>{},onDone=()=>{},onError=()=>{}}){
-  let state='idle',mime='',title='',startedAt=0;
+  let state='idle',mime='',title='',startedAt=0,follow=true;
   let tracks=[],recorder=null,chunks=[],cap=0,tail=0,press=0,reason='';
   const changed=()=>{try{onChange(state);}catch{}};
   const set=next=>{state=next;changed();};
@@ -46,11 +45,12 @@ export function createRecorder({env,now=()=>Date.now(),timers=globalThis,onChang
   }
   // video: the canvas track to record (the recorder stops it at the end). size: its pixel size, for the bitrate.
   // audio: a MediaStream with the machine's sound, or null. onPress: called REC_PRESS_MS after recording starts
-  // unless printing already began. Returns true once recording, false when it could not start.
-  function start({video=null,size=null,title:name='MergeOMatic',audio=null,onPress=null}={}){
+  // unless printing already began. follow: false records until Stop (or the cap), ignoring the print and the tear-off.
+  // capMs: the longest recording. Returns true once recording, false when it could not start.
+  function start({video=null,size=null,title:name='MergeOMatic',audio=null,onPress=null,follow:track=true,capMs=REC_CAP_MS}={}){
     if(state!=='idle')return false;
     if(!env.MediaRecorder||!env.MediaStream||!video){try{video?.stop();}catch{}return fail('unsupported','This browser cannot record video. Use a current Chrome, Edge, Firefox or Safari.');}
-    title=name;reason='';
+    title=name;reason='';follow=track!==false;
     try{video.contentHint='detail';}catch{}
     const sound=(audio?.getAudioTracks?.()||[]).map(t=>t.clone?.()||t);
     tracks=[video,...sound];
@@ -64,14 +64,14 @@ export function createRecorder({env,now=()=>Date.now(),timers=globalThis,onChang
       recorder.start(1000);
     }catch(e){return fail('failed',`Could not start recording: ${e?.message||e}`);}
     video.addEventListener?.('ended',()=>stop('ended'),{once:true});
-    startedAt=now();cap=timers.setTimeout(()=>stop('cap'),REC_CAP_MS);
+    startedAt=now();cap=timers.setTimeout(()=>stop('cap'),capMs);
     if(onPress)press=timers.setTimeout(()=>{press=0;if(state==='armed')try{onPress();}catch{}},REC_PRESS_MS);
     set('armed');
     return true;
   }
-  function printed(){timers.clearTimeout(press);press=0;if(state==='armed')set('rolling');}
+  function printed(){if(!follow)return;timers.clearTimeout(press);press=0;if(state==='armed')set('rolling');}
   // after: ms until the tear-off animation finishes; the recording ends REC_TAIL_MS after that.
-  function torn(after=0){if(state!=='armed'&&state!=='rolling')return;tail=timers.setTimeout(()=>stop('torn'),Math.max(0,after)+REC_TAIL_MS);set('ending');}
+  function torn(after=0){if(!follow||(state!=='armed'&&state!=='rolling'))return;tail=timers.setTimeout(()=>stop('torn'),Math.max(0,after)+REC_TAIL_MS);set('ending');}
   function stop(why='stop'){
     if(state!=='armed'&&state!=='rolling'&&state!=='ending')return;
     reason=why;set('saving');
@@ -79,7 +79,7 @@ export function createRecorder({env,now=()=>Date.now(),timers=globalThis,onChang
     try{if(recorder&&recorder.state!=='inactive')recorder.stop();else finish();}catch{finish();}
   }
   return {start,printed,torn,stop,
-    get state(){return state;},get mime(){return mime;},
+    get state(){return state;},get mime(){return mime;},get follows(){return follow;},
     get active(){return state==='armed'||state==='rolling'||state==='ending';},
     elapsed:()=>state==='idle'?0:now()-startedAt};
 }

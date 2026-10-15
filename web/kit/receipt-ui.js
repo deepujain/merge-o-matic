@@ -150,9 +150,11 @@ export function createReceiptUI(host={}){
   // Any press while the machine is on screen wakes audio, so a suspended or interrupted context is ready.
   for(const type of ['pointerdown','keydown'])doc.addEventListener(type,()=>{if(active()&&!sound?.muted)getSound()?.unlock();},{capture:true,passive:true});
 
-  // Record: the page draws the machine and its paper onto a canvas (receipt-video.js) from the same print job, and
-  // records it with the machine's own audio. No screen capture, so there is no share prompt.
-  let recorder=null,recStage=null,recTick=0,clip=null,recAsk=null,preview=null,recMix=null;
+  // Record has two modes. Whole page: the visitor shares this tab (the browser asks) with its sound, until Stop. Just the machine: the page draws the machine and its
+  // paper onto a canvas (receipt-video.js) from the same print job, with the machine's own audio and no share prompt.
+  let recorder=null,recStage=null,recTick=0,clip=null,recAsk=null,preview=null,recMix=null,recShare=null,recReady=false;
+  const canSharePage=()=>typeof win.navigator?.mediaDevices?.getDisplayMedia==='function';
+  const endShare=()=>{const s=recShare;recShare=null;for(const t of s?.getTracks?.()||[])try{t.stop();}catch{}};
   const unmix=()=>{const off=recMix;recMix=null;try{off?.();}catch{}};
   const recEnv={MediaRecorder:win.MediaRecorder,MediaStream:win.MediaStream};
   const PHASES=new Set(['idle','loading','warming','printing','ready','empty','error']);
@@ -173,17 +175,28 @@ export function createReceiptUI(host={}){
     return recorder;
   }
   chrome.onClose?.(()=>{recAsk=null;});
-  // The Record & Print dialog: the sound choice, then one press records and prints.
+  // The Record dialog: what to record and the sound choice, then one press starts.
   function switchRow(name,checked,title,detail,disabled=false){
     return `<label class="switch-row ${disabled?'is-disabled':''}"><input type="checkbox" name="${name}" role="switch" ${checked?'checked':''} ${disabled?'disabled':''}><span class="switch" aria-hidden="true"></span><span><strong>${title}</strong><small>${detail}</small></span></label>`;
   }
+  function modeRow(value,checked,title,detail,disabled){
+    return `<label class="rcd-mode ${disabled?'is-disabled':''}"><input type="radio" name="recMode" value="${value}" ${checked?'checked':''} ${disabled?'disabled':''}><span><strong>${title}</strong><small>${detail}</small></span></label>`;
+  }
+  function recModes(){
+    const page=canSharePage(),machine=recReady&&!isBusy();
+    return {page,machine,pick:recAsk?.mode==='machine'&&machine?'machine':page?'page':machine?'machine':null};
+  }
   function recDialog(){
-    const a=recAsk||{},s=sound,busy=isBusy();
-    return `<div class="dialog-form rcd-form"><header class="dialog-head rcd-head"><span class="dialog-icon rcd-icon">${icon('record')}</span><div><h2 id="dialog-title">Record the machine</h2><p>Films the machine printing this receipt, with the whole receipt always in view.</p></div></header>
-  <section class="dialog-section rcd-section"><p class="hint rcd-hint">Recording starts, PRINT is pressed 2 seconds later, and the video is ready 2 seconds after the receipt is cut. The video is drawn right here in the page, so there is nothing to share and no browser prompt. Only the machine and its own sound are recorded. Nothing is uploaded.</p>
+    const a=recAsk||{},s=sound,m=recModes();
+    const machineWhy=isBusy()?'Wait for this print to finish.':!recReady?'Load a receipt first.':'';
+    return `<div class="dialog-form rcd-form"><header class="dialog-head rcd-head"><span class="dialog-icon rcd-icon">${icon('record')}</span><div><h2 id="dialog-title">Record a video</h2><p>Saved to this device. Nothing is uploaded.</p></div></header>
+  <section class="dialog-section rcd-section"><fieldset class="rcd-modes" ${a.waiting?'disabled':''}><legend>What to record</legend>
+  ${modeRow('page',m.pick==='page','Whole page','Everything you do here: the username, the repo, the periods and the print. Your browser asks to share this tab; choose it and keep tab audio on. Stop when you are done (up to 5 minutes).',!m.page)}
+  ${modeRow('machine',m.pick==='machine','Just the machine',`Films the machine printing this receipt. PRINT is pressed 2 seconds in, and the video ends 2 seconds after the cut. No browser prompt.${machineWhy?' '+machineWhy:''}`,!m.machine)}
+  </fieldset>
   ${switchRow('recSound',!s?.muted,'Machine sound','Off: the video is silent. This also mutes the machine.',a.waiting)}</section>
-  <p class="error-text rcd-error" role="alert">${esc(busy?'Wait for this print to finish, then record.':a.error||'')}</p>
-  <footer class="dialog-actions rcd-actions"><button type="button" class="button ghost rcd-btn" data-rc="close">Cancel</button><button type="button" class="button primary rcd-btn is-primary" data-rc="recGo" ${a.waiting||busy?'disabled':''}>${icon('record')}${a.waiting?'Starting…':'Record &amp; Print'}</button></footer></div>`;
+  <p class="error-text rcd-error" role="alert">${esc(a.error||(m.pick?'':'This browser cannot record the page. Load a receipt to record just the machine.'))}</p>
+  <footer class="dialog-actions rcd-actions"><button type="button" class="button ghost rcd-btn" data-rc="close">Cancel</button><button type="button" class="button primary rcd-btn is-primary" data-rc="recGo" ${a.waiting||!m.pick?'disabled':''}>${icon('record')}${a.waiting?'Starting…':'Start recording'}</button></footer></div>`;
   }
   function isBusy(){
     const key=keyFor(),job=jobs.get(key),ph=job?lib.jobPhase(job,Date.now()).phase:'';
@@ -195,11 +208,26 @@ export function createReceiptUI(host={}){
     key.classList.add('is-pressed');setTimeout(()=>doc.querySelector('.rm-printkey')?.classList.remove('is-pressed'),160);
     actions.printKey();
   }
+  // Whole page: the dialog closes first so it is not filmed. Cancelling the browser's share prompt does nothing.
+  function recordPage(r){
+    recAsk=null;if(chrome.isOpen())chrome.close();
+    let ask;
+    try{ask=win.navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'browser',frameRate:{ideal:30}},audio:{suppressLocalAudioPlayback:false},
+      preferCurrentTab:true,selfBrowserSurface:'include',surfaceSwitching:'exclude',systemAudio:'exclude',monitorTypeSurfaces:'exclude'});}
+    catch(e){ask=Promise.reject(e);}
+    Promise.resolve(ask).then(stream=>{
+      const video=stream?.getVideoTracks?.()[0];
+      if(!video||r.state!=='idle'){for(const t of stream?.getTracks?.()||[])t.stop();return;}
+      recShare=stream;
+      const st=video.getSettings?.()||{};
+      if(!r.start({video,size:{width:st.width||1280,height:st.height||720,fps:st.frameRate||30},title:lib.printTitle(host.title?.(),range()),audio:stream,follow:false,capMs:rec.REC_PAGE_CAP_MS}))endShare();
+    },e=>{if(e?.name!=='NotAllowedError'&&e?.name!=='AbortError')toast(`Could not share this tab: ${e?.message||e}`,'error');});
+  }
   function recChanged(){
     clearInterval(recTick);recTick=0;
     const r=recorder;
     if(r?.active)recTick=setInterval(()=>{const el=doc.querySelector('.rc-rec-time');if(el)el.textContent=rec.recordingClock(r.elapsed());},500);
-    if(r?.state==='idle'){recStage?.stop();recStage=null;unmix();sound?.releaseCapture?.();}
+    if(r?.state==='idle'){recStage?.stop();recStage=null;endShare();unmix();sound?.releaseCapture?.();}
     if(active())render();
   }
   function recDone({blob,name,mime,reason,duration}){
@@ -208,13 +236,13 @@ export function createReceiptUI(host={}){
     previewOpen(duration,reason);
   }
   const btn='button ghost small receipt-btn';
-  function recButtons(ready,busy){
+  function recButtons(){
     const r=recorder,st=r?.state||'idle';
     if(st!=='idle'){
       const label=st==='saving'?'SAVING':rec.recordingClock(r.elapsed());
-      return `<button type="button" class="${btn} rc-rec is-on" data-rc="recStop" ${st==='saving'?'disabled':''} aria-label="Stop recording" title="${st==='armed'?'Recording. Press PRINT on the machine.':'Stop and save the recording'}"><i class="rc-rec-dot" aria-hidden="true"></i>REC <span class="rc-rec-time">${label}</span><span class="rc-rec-stop">Stop</span></button>`;
+      return `<button type="button" class="${btn} rc-rec is-on" data-rc="recStop" ${st==='saving'?'disabled':''} aria-label="Stop recording" title="${st==='armed'&&r.follows?'Recording. Press PRINT on the machine.':'Stop and save the recording'}"><i class="rc-rec-dot" aria-hidden="true"></i>REC <span class="rc-rec-time">${label}</span><span class="rc-rec-stop">Stop</span></button>`;
     }
-    return `<button type="button" class="${btn} rc-rec" data-rc="record" ${ready&&!busy?'':'disabled'} aria-label="Record the machine" title="${busy?'Wait for this print to finish, then record':'Record the machine printing this receipt'}">${icon('record')}<span class="rc-lbl">Record</span></button>`;
+    return `<button type="button" class="${btn} rc-rec" data-rc="record" aria-label="Record a video" title="Record a video of the whole page or just the machine">${icon('record')}<span class="rc-lbl">Record</span></button>`;
   }
   const canShare=file=>Boolean(file&&win.navigator?.canShare?.({files:[file]}));
   async function png(){
@@ -231,7 +259,7 @@ export function createReceiptUI(host={}){
   function previewOpen(duration,reason){
     previewClose();
     const url=URL.createObjectURL(clip);preview={url};
-    const note=reason==='cap'?' Recordings stop after 90 seconds.':reason==='left'?' Recording stopped when you left the receipt.':'';
+    const note=reason==='cap'?(recorder?.follows===false?' Page recordings stop after 5 minutes.':' Recordings stop after 90 seconds.'):reason==='ended'&&recorder?.follows===false?' Recording stopped when the tab stopped being shared.':reason==='left'?' Recording stopped when you left the receipt.':'';
     chrome.open(`<div class="dialog-form rcd-form rc-clip-dialog"><header class="dialog-head rcd-head"><span class="dialog-icon rcd-icon">${icon('record')}</span><div><h2 id="dialog-title">Your recording</h2><p>Save downloads the video. Cancel throws it away.${note}</p></div></header>
   <section class="rc-clip-preview"><video src="${url}" controls autoplay playsinline aria-label="Recording preview"></video><p class="rc-clip-meta">${esc(rec.clipSummary({name:clip.name,size:clip.size,duration}))}</p></section>
   <footer class="dialog-actions rcd-actions"><button type="button" class="button ghost rcd-btn" data-rc="close">Cancel</button><button type="button" class="button primary rcd-btn is-primary" data-rc="clipSave">${icon('download')}Save</button></footer></div>`,{label:'dialog-title'});
@@ -328,7 +356,7 @@ export function createReceiptUI(host={}){
     if(wake!=null)timer=setTimeout(()=>{timer=0;if(active())render();},wake+30);
     if(recorder?.active){if(warming||printing)recorder.printed();else if(torn)recorder.torn(TEAR_ANIM_MS-(ph.tornFor||0));}
     if(torn&&!m.void&&!job.reported){job.reported=true;try{host.printed?.({range:range(),items:n});}catch{}}
-    const recOn=Boolean(recorder&&recorder.state!=='idle');
+    const recOn=Boolean(recorder&&recorder.state!=='idle');recReady=Boolean(rows);
     const totals=`${plural(n,'ITEM','ITEMS')}  +${sum('additions').toLocaleString('en-US')} −${sum('deletions').toLocaleString('en-US')}`;
     const [phase,lcd,sub]=blocked?['idle','READY',blocked]
       :!rows?[waiting?'warming':'loading',waiting?'WARMING UP':'STAND BY','ASKING GITHUB…']
@@ -369,7 +397,7 @@ export function createReceiptUI(host={}){
   <div class="receipt-controls" ${gathered?'inert aria-hidden="true"':''}>
    ${segmented(Object.entries(RANGES).map(([k,label])=>[k,label,k===DEFAULT_RANGE?today||'':k==='all'?allCount:'']),r)}
    <span class="toolbar-spacer receipt-spacer"></span>
-   ${recButtons(Boolean(rows),busy)}
+   ${recButtons()}
    <button type="button" class="${btn} ${outCls}" data-rc="share" style="--rc-i:0;--rc-shown:${out.since}ms" ${outAttrs} aria-label="Share the receipt image" title="Share the receipt as an image">${icon('share')}<span class="rc-lbl">Share</span></button>
    <button type="button" class="${btn} ${outCls}" data-rc="download" style="--rc-i:1;--rc-shown:${out.since}ms" ${outAttrs} aria-label="Download the receipt image" title="Download the receipt as a PNG">${icon('download')}<span class="rc-lbl">Download</span></button>
   </div>${pill}</div>
@@ -400,18 +428,22 @@ export function createReceiptUI(host={}){
     clipSave:()=>{if(!clip)return;const {name}=clip;saveFile(clip,name);chrome.close();toast(`Saved ${name}.`);},
     record:()=>{
       if(!getRecorder()){toast('Recording is not available in this browser.','error');return;}
-      if(isBusy()){toast('Wait for this print to finish, then record.');return;}
-      getSound();recAsk={error:'',waiting:false};
+      getSound();recAsk={error:'',waiting:false,mode:'page'};
       chrome.open(recDialog(),{label:'dialog-title',render:recDialog});
     },
-    // The click on Record & Print unlocks the machine's audio, so the sound is set up before anything waits.
+    // The click on Start unlocks the machine's audio, so the sound is set up before anything waits. The tab share
+    // must be requested before the first await, while the click still counts as a user gesture.
     recGo:async()=>{
       const r=getRecorder();
-      if(!r||r.state!=='idle'||isBusy()||recAsk?.waiting)return;
+      if(!r||r.state!=='idle'||recAsk?.waiting)return;
+      const picked=chrome.query('input[name="recMode"]:checked')?.value,modes=recModes();
+      const mode=picked==='machine'&&modes.machine?'machine':picked==='page'&&modes.page?'page':modes.pick;
+      if(!mode)return;
       const s=getSound(),wantSound=chrome.query('input[name="recSound"]')?.checked!==false;
       if(s&&s.muted===wantSound)s.setMuted(!wantSound);
       s?.unlock();
-      recAsk={error:'',waiting:true};chrome.refresh();
+      if(mode==='page'){recordPage(r);return;}
+      recAsk={error:'',waiting:true,mode};chrome.refresh();
       let video=null,title=null;
       try{title=host.videoTitle?.()||null;}catch{title=null;}
       const fonts=(title?.fonts||[]).map(f=>Promise.resolve(doc.fonts?.load?.(f)).catch(()=>null));
@@ -464,7 +496,7 @@ export function createReceiptUI(host={}){
     // For a host-drawn island: stops the recording, even mid-print, and bubbles the toolbar back out.
     stopRecording(){if(recorder&&recorder.state!=='idle'&&recorder.state!=='saving')actions.recStop();},
     // Call after the host puts html() into the document.
-    mounted(){if(recorder?.active&&!doc.querySelector('.rm-frame'))queueMicrotask(()=>recorder?.stop('left'));},
+    mounted(){if(recorder?.active&&recorder.follows&&!doc.querySelector('.rm-frame'))queueMicrotask(()=>recorder?.stop('left'));},
     // Coming back to the machine: every range starts at READY again.
     enter(){jobs.clear();isl=null;},
     // Leaving the machine: cancel the print and its sound.

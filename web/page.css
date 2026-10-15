@@ -200,7 +200,8 @@ body{min-height:100dvh;background:radial-gradient(1200px 500px at 50% -120px,#ed
 @keyframes mom-fade-in{from{opacity:0}}
 @keyframes mom-fade-out{to{opacity:0}}
 /* The toolbar shares the card's width and edges: the range picker flush left, Record flush right, and Share and
-   Download emerging to Record's left in slots that are always reserved, so nothing shifts. Every control is one height. */
+   Download emerging to Record's left in slots that are always reserved, so nothing shifts. Share and Download are
+   square icon buttons so the whole row fits on one line in every style, count badges included. Every control is one height. */
 .mom-receipt{--mom-bar-h:38px}
 [data-style="halloween"] .mom-receipt{--mom-bar-h:40px}
 .mom-receipt .rc-island{width:min(100%,720px)}
@@ -209,6 +210,8 @@ body{min-height:100dvh;background:radial-gradient(1200px 500px at 50% -120px,#ed
 .mom-receipt .receipt-stage[data-chrome="kit"] .receipt-seg{box-sizing:border-box;height:var(--mom-bar-h);align-items:center}
 .mom-receipt .receipt-stage[data-chrome="kit"] .receipt-seg button{height:100%}
 .mom-receipt .receipt-stage[data-chrome="kit"] .receipt-btn{box-sizing:border-box;height:var(--mom-bar-h)}
+.mom-receipt .receipt-controls .rc-out{min-width:var(--mom-bar-h);padding-inline:0;justify-content:center}
+.mom-receipt .receipt-controls .rc-out .rc-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .mom-receipt .receipt-controls [data-rc="share"]{order:2;margin-left:auto}
 .mom-receipt .receipt-controls [data-rc="download"]{order:3}
 .mom-receipt .receipt-controls .rc-rec{order:4}

@@ -78,6 +78,24 @@ test('a host-drawn island replaces the pill with a hidden status and hears every
   assert.match(m.button('share'),/is-shown/,'Share still waits for a finished print');
 });
 
+test('Record works before anything is loaded: it offers the whole page, asks to share this tab, and closes first',async()=>{
+  let opened='',closed=0;const asked=[],stream={tracks:[{kind:'video',stop(){this.stopped=true;},addEventListener(){}},{kind:'audio',stop(){this.stopped=true;}}]};
+  stream.getTracks=()=>stream.tracks;stream.getVideoTracks=()=>stream.tracks.filter(t=>t.kind==='video');stream.getAudioTracks=()=>stream.tracks.filter(t=>t.kind==='audio');
+  const win={addEventListener(){},requestAnimationFrame:()=>1,scrollBy(){},innerHeight:800,
+    navigator:{mediaDevices:{getDisplayMedia:async o=>{asked.push(o);return stream;}}}};
+  const chrome={open:h=>{opened=h;},refresh(){},close:()=>{closed++;},isOpen:()=>Boolean(opened)&&!closed,onClose(){},query:sel=>sel==='input[name="recMode"]:checked'?{value:'page'}:null,toast(){}};
+  const m=machine(oneItem,{win,chrome,scope:()=>null,blocked:()=>'TYPE A USERNAME'});
+  assert.doesNotMatch(m.button('record'),/ disabled/,'Record is on with nothing loaded');
+  m.press('record');
+  assert.match(opened,/name="recMode" value="page" checked/,'the whole page is the default');
+  assert.match(opened,/name="recMode" value="machine"  disabled/,'the machine needs a receipt first');
+  m.press('recGo');
+  assert.equal(closed,1,'the dialog closes before the share prompt, so it is not filmed');
+  assert.equal(asked[0].preferCurrentTab,true);assert.equal(asked[0].video.displaySurface,'browser');
+  await new Promise(r=>setTimeout(r,0));
+  assert.ok(stream.tracks.every(t=>t.stopped),'without MediaRecorder nothing records and the share ends');
+});
+
 test('a failed print bubbles the controls back out once the VOID slip is printed',async t=>{
   t.mock.timers.enable({apis:['setTimeout','Date'],now:Date.UTC(2026,8,30,17)});
   const m=machine(async()=>{throw new Error('GitHub could not be reached.');});

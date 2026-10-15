@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRecorder,pickMime,recordingBitrate,opaqueColor,REC_MIN_BPS,REC_MAX_BPS,recordingName,recordingClock,recordingSize,clipSummary,REC_CAP_MS,REC_TAIL_MS,REC_PRESS_MS,REC_TYPES} from '../web/kit/receipt-recorder.js';
+import {createRecorder,pickMime,recordingBitrate,opaqueColor,REC_MIN_BPS,REC_MAX_BPS,recordingName,recordingClock,recordingSize,clipSummary,REC_CAP_MS,REC_PAGE_CAP_MS,REC_TAIL_MS,REC_PRESS_MS,REC_TYPES} from '../web/kit/receipt-recorder.js';
 
 function clock(){
   let t=0,id=0;const due=new Map();
@@ -85,6 +85,18 @@ test('Stop, the 90 s cap, and an ended track all save what was recorded',()=>{
     assert.ok(f.video.stopped);assert.equal(c.pending(),0);assert.equal(rec.state,'idle');
     rec.stop();assert.equal(done.length,1,'stopping again does nothing');
   }
+});
+
+test('a whole-page recording ignores the print and the tear-off, and runs until Stop or the 5 minute cap',()=>{
+  const c=clock(),f=fakeEnv(),done=[],presses=[];
+  const rec=createRecorder({env:f.env,now:c.now,timers:c.timers,onDone:d=>done.push(d)});
+  assert.equal(rec.start({video:f.video,title:'NemoclawMergeOMatic',follow:false,capMs:REC_PAGE_CAP_MS,onPress:()=>presses.push(1)}),true);
+  assert.equal(rec.follows,false);assert.equal(REC_PAGE_CAP_MS,300000);
+  rec.printed();rec.torn(0);c.advance(REC_CAP_MS);
+  assert.equal(rec.state,'armed','printing and tearing never end it, nor does the 90 s machine cap');assert.equal(done.length,0);
+  c.advance(REC_PAGE_CAP_MS-REC_CAP_MS);
+  assert.equal(done[0].reason,'cap');assert.equal(c.pending(),0);
+  rec.start({video:fakeTrack('video')});assert.equal(rec.follows,true,'the next recording follows the print again');rec.stop();
 });
 
 test('a browser without MediaRecorder or a canvas track explains itself and leaves nothing running',()=>{
