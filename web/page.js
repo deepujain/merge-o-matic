@@ -306,10 +306,11 @@ const info=(()=>{
 
 // Idle letters: once the heading has popped in, every 2 to 5 s one to three letters make a quick move. Transforms only,
 // skipped while the tab is hidden, under reduced motion, in Normal, and never on the O while it is the island.
-// Halloween has spookier moves, a candle flicker on the pumpkin, and now and then a bat flutters across the heading.
+// Halloween has spookier moves, a candle flicker on the pumpkin, a witch, bats and spiders.
 const IDLE={crayon:['wiggle','hop','tilt','squish','flip','nod'],halloween:['wobble','wobble','hop','squish','nod']};
 const takeRandom=list=>list.splice(Math.floor(Math.random()*list.length),1)[0];
 const bat=document.querySelector('.mom-bat');
+const flock=bat?[bat,...[1,2,3].map(()=>{const b=bat.cloneNode(true);bat.after(b);return b;})]:[];
 function play(el,cls,ms=1400){
   const done=()=>{clearTimeout(t);el.classList.remove('is-idle',cls);};
   const t=setTimeout(done,ms);
@@ -323,13 +324,14 @@ function idle(){
   const n=Math.random()<.6?1:Math.random()<.75?2:3;
   for(let i=0;i<n&&letters.length;i++)play(takeRandom(letters),`idle-${moves[Math.floor(Math.random()*moves.length)]}`);
 }
-// Halloween's own timers: the pumpkin's candle flickers every 3 to 6 s; a bat flies out of the pumpkin, circles it and
-// leaves shortly after the heading pops in, then every 8 to 15 s; and every 25 to 40 s the pumpkin turns into a cauldron
-// and a witch on a broom rises out of it and swoops away. Paths are WAAPI transforms and opacity, paused while the tab is
-// hidden. Never under reduced motion, never while the O is the island, and never two flights at once.
+// Halloween's own timers: the pumpkin's candle flickers every 3 to 6 s. Shortly after the heading pops in, then every
+// 25 to 40 s, the pumpkin turns into a cauldron and a witch on a broom rises out of it, circles the heading and flies
+// off. Every 6 to 12 s three or four bats flit across the sky, each on its own wandering path. Spiders are CSS only.
+// Paths are WAAPI transforms and opacity, paused while the tab is hidden. Never under reduced motion; the witch never
+// while the O is the island, and never two witches at once.
 const spooky=()=>!document.hidden&&!reduced.matches&&pageStyle()==='halloween';
 const witch=document.querySelector('.mom-witch'),sparks=[...document.querySelectorAll('.mom-sparks b')];
-const flights=new Set();
+const flights=new Set(),swarm=new Set();
 const oBusy=()=>oFor.letters.matches('.is-island,.is-release,.is-rec');
 const flying=()=>flights.size>0;
 function flicker(){
@@ -339,10 +341,11 @@ function flicker(){
 }
 // Where the pumpkin sits and how big the heading is, relative to the bat's and witch's positioned parent.
 function stage(){
-  const o=oFor.letters.getBoundingClientRect(),box=title.getBoundingClientRect(),intro=bat?.offsetParent?.getBoundingClientRect();
+  const o=oFor.letters.getBoundingClientRect(),box=(title.querySelector('.mom-word')||title).getBoundingClientRect(),intro=bat?.offsetParent?.getBoundingClientRect();
   if(!intro||!o.width)return null;
   return {cx:o.left+o.width/2-intro.left,cy:o.top+o.height/2-intro.top,w:o.width,h:o.height,
-    left:box.left-intro.left,right:box.right-intro.left,top:box.top-intro.top,k:Math.max(.55,Math.min(1.1,o.width/70))};
+    left:box.left-intro.left,right:box.right-intro.left,top:box.top-intro.top,k:Math.max(.55,Math.min(1.1,o.width/70)),
+    vl:-intro.left,vr:document.documentElement.clientWidth-intro.left,vt:-intro.top,bottom:intro.height};
 }
 const tf=(x,y,s,r=0,flip=1)=>`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${r.toFixed(1)}deg) scale(${(s*flip).toFixed(3)},${s.toFixed(3)})`;
 function fly(el,frames,duration,delay=0){
@@ -352,45 +355,47 @@ function fly(el,frames,duration,delay=0){
   anim.finished.then(end,end);
   return anim;
 }
-// Out of the carved mouth, up over the stem, one and a quarter loops around the pumpkin, then off and away.
-function batFrames(g,dir){
-  const {cx,cy,w,h,k}=g,rx=w*.78+14*k,ry=h*.62+10*k,f=[];
-  f.push({offset:0,opacity:0,transform:tf(cx,cy+h*.18,.1*k)});
-  f.push({offset:.07,opacity:1,transform:tf(cx,cy+h*.05,.35*k)});
-  f.push({offset:.18,transform:tf(cx+dir*6,cy-ry,.8*k,-dir*8)});
-  const n=26,turn=Math.PI*2.5;
-  for(let i=1;i<=n;i++){
-    const t=i/n,a=-Math.PI/2+dir*turn*t,depth=.9+.14*Math.sin(a);
-    f.push({offset:.18+.58*t,transform:tf(cx+rx*Math.cos(a),cy+ry*Math.sin(a),depth*k,dir*Math.cos(a)*14)});
+// A bat's wandering path: in from one side of the screen, dipping and swooping over the heading, out the other side.
+function wanderFrames(g,dir){
+  const lo=g.vl+40,hi=g.vr-40,top=Math.max(g.vt+16,g.top-30),low=Math.max(top+40,g.bottom),f=[],n=24;
+  const k=g.k*(.45+Math.random()*.35),y0=top+Math.random()*(low-top),y1=top+Math.random()*(low-top);
+  const amp=12+Math.random()*28,waves=1.5+Math.random()*2,ph=Math.random()*Math.PI*2;
+  for(let i=0;i<=n;i++){
+    const t=i/n,w=ph+t*waves*Math.PI*2,x=dir>0?lo+(hi-lo)*t:hi-(hi-lo)*t,fade=t<.08?t/.08:t>.92?(1-t)/.08:1;
+    f.push({offset:t,opacity:+fade.toFixed(2),transform:tf(x,y0+(y1-y0)*t+amp*Math.sin(w),k,dir*8*Math.cos(w))});
   }
-  const edge=dir>0?g.right+60:g.left-60;
-  f.push({offset:.9,opacity:.9,transform:tf(cx+(edge-cx)*.55,g.top-18*k,.6*k,-dir*10)});
-  f.push({offset:1,opacity:0,transform:tf(edge,g.top-54*k,.22*k,-dir*16)});
   return f;
 }
-function flyBat(force=false){
-  if(!bat||flying()||oBusy()||!(force?pageStyle()==='halloween':spooky()))return null;
-  const g=stage();if(!g)return null;
-  bat.classList.add('is-flying');
-  const anim=fly(bat,batFrames(g,Math.random()<.5?1:-1),4600);
-  const done=()=>bat.classList.remove('is-flying');anim.finished.then(done,done);
-  return anim;
+function flyBats(force=false){
+  if(!(force?pageStyle()==='halloween':spooky()))return 0;
+  const g=stage();if(!g)return 0;
+  const free=flock.filter(b=>!b.classList.contains('is-flying')),n=Math.min(free.length,Math.random()<.5?3:4);
+  for(const [i,b] of free.slice(0,n).entries()){
+    b.classList.add('is-flying');b.style.setProperty('--flap',`${(.13+Math.random()*.07).toFixed(2)}s`);
+    const anim=b.animate(wanderFrames(g,Math.random()<.5?1:-1),{duration:5000+Math.random()*3000,delay:i*(300+Math.random()*900),fill:'both',easing:'linear'});
+    swarm.add(anim);
+    const end=()=>{swarm.delete(anim);anim.cancel();b.classList.remove('is-flying');};
+    anim.finished.then(end,end);
+  }
+  return n;
 }
-function bats(first){setTimeout(()=>{flyBat();bats(false);},first?900:8000+Math.random()*7000);}
-// The cauldron: the pumpkin squashes into the pot and the brew bubbles; the witch rises out, swoops across the heading
-// and flies off; then the pumpkin pops back. About 3.6 s in all.
-const BREW=3600;
+function bats(first){setTimeout(()=>{flyBats();bats(false);},first?3000:6000+Math.random()*6000);}
+// The cauldron: the pumpkin squashes into the pot and the brew bubbles, and the pumpkin pops back after 3.6 s. The
+// witch rises out of the pot, circles the heading two and three quarter times, then climbs away off the side she is on.
+const BREW=3600,WITCH_MS=8000;
 function witchFrames(g,dir){
-  const {cx,cy,k}=g,flip=dir>0?1:-1,edge=dir>0?g.right+90:g.left-90,span=edge-cx;
-  return [
-    {offset:0,opacity:0,transform:tf(cx,cy-2,.08*k,0,flip)},
-    {offset:.06,opacity:1,transform:tf(cx,cy-6*k,.3*k,-flip*20,flip)},
-    {offset:.22,transform:tf(cx-dir*10*k,cy-g.h*1.05,.85*k,-flip*14,flip)},
-    {offset:.4,transform:tf(cx+span*.2,cy+g.h*.25,1*k,flip*14,flip)},
-    {offset:.58,transform:tf(cx+span*.45,cy+g.h*.4,1.05*k,flip*4,flip)},
-    {offset:.76,opacity:1,transform:tf(cx+span*.72,cy-g.h*.25,.8*k,-flip*16,flip)},
-    {offset:1,opacity:0,transform:tf(edge,g.top-70*k,.3*k,-flip*24,flip)},
-  ];
+  const {cx,cy,k}=g,rx=Math.min((g.right-g.left)*.5+16*k,Math.min(cx-g.vl,g.vr-cx)-44*k),ry=g.h*.95+8*k,turn=Math.PI*2*2.75,n=72,f=[];
+  f.push({offset:0,opacity:0,transform:tf(cx,cy-2,.08*k,0,dir)});
+  f.push({offset:.04,opacity:1,transform:tf(cx,cy-6*k,.3*k,-dir*20,dir)});
+  f.push({offset:.1,transform:tf(cx,cy-ry,.8*k,-dir*10,dir)});
+  for(let i=1;i<=n;i++){
+    const t=i/n,a=-Math.PI/2+dir*turn*t,face=-dir*Math.sin(a)>=0?1:-1;
+    f.push({offset:.1+.78*t,transform:tf(cx+rx*Math.cos(a),cy+ry*Math.sin(a),(.85+.2*Math.sin(a))*k,face*10*Math.sin(a)*Math.cos(a),face)});
+  }
+  const face=-dir,side=cx-dir*rx,edge=dir>0?g.left-90:g.right+90;
+  f.push({offset:.94,opacity:1,transform:tf(side+(edge-side)*.5,g.top-30*k,.7*k,dir*18,face)});
+  f.push({offset:1,opacity:0,transform:tf(edge,g.top-80*k,.35*k,dir*24,face)});
+  return f;
 }
 const jack=oFor.letters.querySelector('.jk-pumpkin'),pot=oFor.letters.querySelector('.jk-pot');
 function brew(force=false){
@@ -402,9 +407,9 @@ function brew(force=false){
     {offset:.82,opacity:0,transform:'scale(.6,1.2)'},{offset:.93,opacity:1,transform:'scale(1.08,.94)'},{offset:1,opacity:1,transform:'scale(1)'}],BREW);
   fly(pot,[{offset:0,opacity:0,transform:'scale(.7,1.25)'},{offset:.12,opacity:1,transform:'scale(1.06,.95)'},{offset:.18,transform:'scale(1)'},
     {offset:.78,opacity:1,transform:'scale(1)'},{offset:.9,opacity:0,transform:'scale(1.15,.5)'},{offset:1,opacity:0,transform:'scale(1)'}],BREW);
-  const frames=witchFrames(g,dir),anim=fly(witch,frames,2700,380);
+  const frames=witchFrames(g,dir),anim=fly(witch,frames,WITCH_MS,380);
   sparks.forEach((el,i)=>fly(el,frames.map(({offset,opacity,transform})=>({offset,transform:`${transform} scale(${(.8-i*.1).toFixed(2)})`,
-    ...(opacity===undefined?{}:{opacity:opacity*(.9-i*.14)})})),2700,380+(i+1)*70));
+    ...(opacity===undefined?{}:{opacity:opacity*(.9-i*.14)})})),WITCH_MS,380+(i+1)*70));
   const done=()=>{witch.classList.remove('is-flying');O.classList.remove('is-brew');};
   Promise.allSettled([...flights].map(a=>a.finished)).then(done);
   return anim;
@@ -412,11 +417,11 @@ function brew(force=false){
 function witches(wait=25000+Math.random()*15000){setTimeout(()=>{if(spooky()&&(flying()||oBusy()))return witches(2000);brew();witches();},wait);}
 // Printing or recording takes the O, so a flight in progress ends at once.
 function grounded(){for(const a of [...flights])a.finish();}
-document.addEventListener('visibilitychange',()=>{for(const a of flights)document.hidden?a.pause():a.play();});
-window.momHalloween={bat:()=>Boolean(flyBat(true)),witch:()=>Boolean(brew(true)),
+document.addEventListener('visibilitychange',()=>{for(const a of [...flights,...swarm])document.hidden?a.pause():a.play();});
+window.momHalloween={bats:()=>flyBats(true),witch:()=>Boolean(brew(true)),
   seek:ms=>{for(const a of flights){a.pause();a.currentTime=ms;}return flights.size;},
   play:()=>{for(const a of flights)a.play();},flights:()=>flights.size};
-setTimeout(()=>{title.classList.add('is-played');idle();flicker();bats(true);witches();},1400);
+setTimeout(()=>{title.classList.add('is-played');idle();flicker();bats(true);witches(900);},1400);
 
 const ui=createReceiptUI({
   getRange:()=>state.range,
