@@ -471,7 +471,7 @@ body{min-height:100dvh;background:radial-gradient(1200px 500px at 50% -120px,#ed
 .mom-sparks b:nth-child(even){background:#bef264}
 [data-style="halloween"] :is(.mom-bat,.mom-witch,.mom-sparks){display:block}
 [data-style="halloween"]{overflow-x:clip}
-/* Spiders hang from the top of the page on silk, drop lower now and then and climb back. The silk runs up past the
+/* Spiders hang near the heading from the top of the page on silk, drop lower now and then and climb back. The silk runs up past the
    top of the page, so a spider never shows the end of its thread. */
 .mom-spiders{display:none;position:absolute;left:0;top:0;width:100%;height:0;z-index:3;pointer-events:none}
 [data-style="halloween"] .mom-spiders{display:block}
@@ -482,9 +482,9 @@ body{min-height:100dvh;background:radial-gradient(1200px 500px at 50% -120px,#ed
 .msp-legs{fill:none;stroke:#140a1f;stroke-width:1.7;stroke-linecap:round;transform-origin:16px 17px}
 .msp-body{fill:#140a1f}
 .msp-eye{fill:#f97316}
-.mom-spider:nth-child(1){--x:4%;--drop:70px;--sp:24px;--dur:11s;--wait:-2s}
-.mom-spider:nth-child(2){--x:13%;--drop:150px;--sp:17px;--dur:15s;--wait:-9s}
-.mom-spider:nth-child(3){--x:96%;--drop:110px;--sp:21px;--dur:13s;--wait:-5s}
+.mom-spider:nth-child(1){--x:max(4%,calc(50% - 450px));--drop:70px;--sp:24px;--dur:11s;--wait:-2s}
+.mom-spider:nth-child(2){--x:max(13%,calc(50% - 385px));--drop:150px;--sp:17px;--dur:15s;--wait:-9s}
+.mom-spider:nth-child(3){--x:min(96%,calc(50% + 450px));--drop:110px;--sp:21px;--dur:13s;--wait:-5s}
 @media (max-width:720px){.mom-spider:nth-child(3){display:none}}
 @media (prefers-reduced-motion:no-preference){
   [data-style="halloween"] .mom-spider{animation:mom-spider-drop var(--dur) ease-in-out var(--wait) infinite}

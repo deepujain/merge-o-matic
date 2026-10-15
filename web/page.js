@@ -382,7 +382,7 @@ function flyBats(force=false){
 function bats(first){setTimeout(()=>{flyBats();bats(false);},first?3000:6000+Math.random()*6000);}
 // The cauldron: the pumpkin squashes into the pot and the brew bubbles, and the pumpkin pops back after 3.6 s. The
 // witch rises out of the pot, circles the heading two and three quarter times, then climbs away off the side she is on.
-const BREW=3600,WITCH_MS=8000;
+const BREW=3600,WITCH_MS=15000;
 function witchFrames(g,dir){
   const {cx,cy,k}=g,rx=Math.min((g.right-g.left)*.5+16*k,Math.min(cx-g.vl,g.vr-cx)-44*k),ry=g.h*.95+8*k,turn=Math.PI*2*2.75,n=72,f=[];
   f.push({offset:0,opacity:0,transform:tf(cx,cy-2,.08*k,0,dir)});

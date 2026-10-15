@@ -239,7 +239,7 @@ test('Halloween restyles the page and heading and gives the O a pumpkin, and the
   assert.match(html,/<i class="mom-witch" aria-hidden="true">/);
   assert.match(html,/<i class="mom-sparks" aria-hidden="true">/);
   assert.match(js,/function witchFrames\(g,dir\)\{[^]*?turn=Math\.PI\*2\*2\.75/,'the witch circles the heading two and three quarter times');
-  assert.match(js,/const BREW=3600,WITCH_MS=8000;/,'the cauldron for 3.6 s, the witch for 8 s');
+  assert.match(js,/const BREW=3600,WITCH_MS=15000;/,'the cauldron for 3.6 s, the witch for 15 s');
   assert.match(js,/function witches\(wait=25000\+Math\.random\(\)\*15000\)/,'the witch every 25 to 40 s');
   assert.match(js,/witches\(900\);\},1400\);/,'the witch comes out of the pumpkin soon after the heading pops in');
   assert.match(js,/if\(!witch\|\|!jack\|\|!pot\|\|flying\(\)\|\|oBusy\(\)/,'never two witches, and never while the O is the island');
