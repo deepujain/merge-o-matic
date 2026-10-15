@@ -19,7 +19,6 @@ export const STEPS=[
     say:"The T button changes the look. Here's Crayon. Here's Normal. Each one comes in light and dark, and the music button plays a tune to match. But tonight, it's Halloween."},
   {id:'about',text:"The i button covers privacy. Pull requests and receipts are never stored, and prints are counted anonymously. The meter shows how much GitHub lookup capacity is left.",
     say:"The i button covers privacy. Pull requests and receipts are never stored, and prints are counted anonymously. The meter shows how much GitHub lookup capacity is left."},
-  {id:'link',text:"Every receipt has its own link. The username, repository and range live in the address, so anyone who opens it sees the same receipt."},
   {id:'outro',text:"That's Merge-O-Matic. Print your merges, share your receipt, and have a spooky Halloween.",
     say:"That's Merge-O-Matic. Print your merges, share your receipt, and have a spooky Halloween!"}
 ];

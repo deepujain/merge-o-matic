@@ -7,7 +7,6 @@ import {STEPS} from './demo-script.js';
 
 const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
 const $=sel=>document.querySelector(sel);
-const DEMO_KEYS=['hackathon','autoplay','voice','captions'];
 
 export function wordCount(steps=STEPS){return steps.reduce((n,s)=>n+s.text.split(/\s+/).filter(Boolean).length,0);}
 
@@ -106,13 +105,6 @@ export function createDemo({flags,page,ui,onDone=()=>{}}){
       await at(.08);press($('#mom-info'));
       await at(.62);spot($('#mom-meter'),2400);
       await at(.96);page.info.close(false);
-    },
-    async link(at){
-      const card=document.createElement('div');card.className='mom-demo-link';card.setAttribute('aria-hidden','true');
-      const q=new URLSearchParams(location.search);for(const k of [...DEMO_KEYS,'style','appearance'])q.delete(k);
-      card.textContent=`${location.host}${location.pathname}${q.toString()?`?${q}`:''}`;
-      await at(.12);document.body.append(card);requestAnimationFrame(()=>card.classList.add('is-on'));
-      await at(.92);card.classList.remove('is-on');setTimeout(()=>card.remove(),400);
     },
     async outro(at){
       await at(.2);page.halloween()?.witch();

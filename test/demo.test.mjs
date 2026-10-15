@@ -15,7 +15,7 @@ test('the demo script is 300 to 400 words, about two to three minutes, and every
   for(const id of ids)assert.match(demo,new RegExp(`\\n    async ${id}\\(at`),`${id} has an action`);
   for(const s of STEPS)if(s.say)assert.ok(Math.abs(words(s.say)-words(s.text))<=4,`${s.id}: the voice reads the caption`);
   const all=STEPS.map(s=>s.text).join(' ');
-  for(const feature of ['Try deepujain','NemoClaw','Week','PRINT','LCD','BAGGED BY','tax','CI TEND','Share','Download','Record','Crayon','Light and Dark','music','privacy','meter','link','Halloween'])
+  for(const feature of ['Try deepujain','NemoClaw','Week','PRINT','LCD','BAGGED BY','tax','CI TEND','Share','Download','Record','Crayon','Light and Dark','music','privacy','meter','Halloween'])
     assert.ok(all.includes(feature),`covers ${feature}`);
 });
 
