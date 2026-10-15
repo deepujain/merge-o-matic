@@ -17,6 +17,8 @@
 //   recordAudio({context,destination}) -> optional: connect the host's own audio (music) into Record & Print's
 //     audio track, at the level it plays; returns a function that disconnects it when the recording ends.
 //   recordArea() -> optional {x,width} in viewport CSS pixels: the column a whole-page recording is cropped to.
+//   recordLabel: optional text for the Record button. quickRecord: true -> Record films the whole page at once, with
+//     no dialog, where the browser can share the tab. recordChanged(state) -> optional: told every recorder state.
 //   chrome: {open(html,{label,render}),refresh(),close(),isOpen(),onClose(fn),query(sel),toast(msg,tone)} to use
 //     the host's dialog and toast; without it the kit brings its own.
 import * as lib from './receipt.js';
@@ -266,6 +268,7 @@ export function createReceiptUI(host={}){
     const r=recorder;
     if(r?.active)recTick=setInterval(()=>{const el=doc.querySelector('.rc-rec-time');if(el)el.textContent=rec.recordingClock(r.elapsed());},500);
     if(r?.state==='idle'){recStage?.stop();recStage=null;endShare();unmix();sound?.releaseCapture?.();}
+    try{host.recordChanged?.(r?.state||'idle');}catch{}
     if(active())render();
   }
   function recDone({blob,name,mime,reason,duration}){
@@ -280,7 +283,8 @@ export function createReceiptUI(host={}){
       const label=st==='saving'?'SAVING':rec.recordingClock(r.elapsed());
       return `<button type="button" class="${btn} rc-rec is-on" data-rc="recStop" ${st==='saving'?'disabled':''} aria-label="Stop recording" title="${st==='armed'&&r.follows?'Recording. Press PRINT on the machine.':'Stop and save the recording'}"><i class="rc-rec-dot" aria-hidden="true"></i>REC <span class="rc-rec-time">${label}</span><span class="rc-rec-stop">Stop</span></button>`;
     }
-    return `<button type="button" class="${btn} rc-rec" data-rc="record" aria-label="Record a video" title="Record a video of the whole page or just the machine">${icon('record')}<span class="rc-lbl">Record</span></button>`;
+    const label=esc(host.recordLabel||'Record');
+    return `<button type="button" class="${btn} rc-rec" data-rc="record" aria-label="${host.recordLabel?label:'Record a video'}" title="${host.quickRecord?'Record a video of the whole page':'Record a video of the whole page or just the machine'}">${icon('record')}<span class="rc-lbl">${label}</span></button>`;
   }
   const canShare=file=>Boolean(file&&win.navigator?.canShare?.({files:[file]}));
   async function png(){
@@ -465,7 +469,9 @@ export function createReceiptUI(host={}){
     download:async()=>{const file=await png();if(!file)return;saveFile(file,file.name);toast(`Saved ${file.name}.`);},
     clipSave:()=>{if(!clip)return;const {name}=clip;saveFile(clip,name);chrome.close();toast(`Saved ${name}.`);},
     record:()=>{
-      if(!getRecorder()){toast('Recording is not available in this browser.','error');return;}
+      const r=getRecorder();
+      if(!r){toast('Recording is not available in this browser.','error');return;}
+      if(host.quickRecord&&canSharePage()){if(r.state==='idle'){getSound();recordPage(r);}return;}
       getSound();recAsk={error:'',waiting:false,mode:'page'};
       chrome.open(recDialog(),{label:'dialog-title',render:recDialog});
     },

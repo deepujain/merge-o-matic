@@ -7,13 +7,13 @@ const page=new URL('../web/',import.meta.url);
 const source=await readFile(new URL('style.js',page),'utf8');
 
 // Runs style.js the way the page's head does, against a stand-in document and localStorage.
-function boot(storage,{dark=false}={}){
+function boot(storage,{dark=false,search=''}={}){
   const media={matches:dark,listeners:[],addEventListener(type,fn){if(type==='change')this.listeners.push(fn);},
     flip(on){this.matches=on;for(const fn of this.listeners)fn({matches:on});}};
-  const window={localStorage:storage,matchMedia:q=>q==='(prefers-color-scheme: dark)'?media:{matches:false}};
+  const window={localStorage:storage,location:{search},matchMedia:q=>q==='(prefers-color-scheme: dark)'?media:{matches:false}};
   const meta={content:'#f6f3ee',setAttribute(k,v){this[k]=v;}};
   const document={documentElement:{dataset:{},style:{}},querySelector:q=>q==='meta[name="theme-color"]'?meta:null};
-  vm.runInNewContext(source,{window,document});
+  vm.runInNewContext(source,{window,document,URLSearchParams});
   return {root:document.documentElement,api:window.momStyle,look:window.momAppearance,media,meta};
 }
 function memory(){const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),map:m};}
@@ -23,6 +23,17 @@ test('Normal is the default before anything is saved',()=>{
   assert.equal(root.dataset.style,'normal');assert.equal(api.get(),'normal');
   assert.equal('patches' in root.dataset,false,'no patch marker in any style');
   assert.equal(meta.content,'#f6f3ee');
+});
+
+test('?style= and ?appearance= in the link win for the visit without being saved, and bad values are ignored',()=>{
+  const store=memory();store.setItem('merge-o-matic-style','crayon');
+  const {root}=boot(store,{search:'?style=halloween&appearance=dark'});
+  assert.equal(root.dataset.style,'halloween');assert.equal(root.dataset.appearance,'dark');assert.equal(root.dataset.theme,'dark');
+  assert.equal(store.getItem('merge-o-matic-style'),'crayon','the saved style is untouched');
+  assert.equal(store.map.size,1,'nothing new is saved');
+  const bad=boot(store,{search:'?style=gothic&appearance=neon'});
+  assert.equal(bad.root.dataset.style,'crayon','an unknown style falls back to the saved one');
+  assert.equal(bad.root.dataset.appearance,'auto');
 });
 
 test('the font style choice is saved and applied on the next load',()=>{

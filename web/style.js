@@ -1,4 +1,4 @@
-// Runs before the stylesheets so the saved page style and appearance are on the first paint, with no flash.
+// Runs before the stylesheets so the saved page style and appearance, or the link's, are on the first paint, with no flash.
 // Style: Normal, the plain heading, is the default. Halloween shows the letter-tile heading with a pumpkin O; Crayon
 // draws each letter in its own crayon. A value saved as "varsity" or "classic" by an earlier version is read, and
 // saved again, as "normal".
@@ -34,9 +34,12 @@
     if (before && before !== root.dataset.theme) for (const fn of listeners) { try { fn(root.dataset.theme); } catch {} }
     return appearance;
   };
+  // ?style= and ?appearance= in the link win for this visit only; they are not saved.
+  const query = (() => { try { return new URLSearchParams(window.location?.search || ''); } catch { return null; } })();
+  const linkStyle = query?.get('style'), linkAppearance = query?.get('appearance');
   const first = read(KEY);
-  applyAppearance(validAppearance(read(APPEARANCE_KEY)));
-  apply(valid(first));
+  applyAppearance(APPEARANCES.includes(linkAppearance) ? linkAppearance : validAppearance(read(APPEARANCE_KEY)));
+  apply(STYLES.includes(linkStyle) ? linkStyle : valid(first));
   if (RETIRED.includes(first)) write(KEY, 'normal');
   system?.addEventListener?.('change', () => { if (root.dataset.appearance === 'auto') applyAppearance('auto'); });
   window.momStyle = {

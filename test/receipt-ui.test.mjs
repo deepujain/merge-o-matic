@@ -96,6 +96,25 @@ test('Record works before anything is loaded: it offers the whole page, asks to 
   assert.ok(stream.tracks.every(t=>t.stopped),'without MediaRecorder nothing records and the share ends');
 });
 
+test('quickRecord with a label skips the dialog and asks to share this tab at once',async()=>{
+  let opened='';const asked=[],stream={tracks:[{kind:'video',stop(){this.stopped=true;},addEventListener(){}}]};
+  stream.getTracks=()=>stream.tracks;stream.getVideoTracks=()=>stream.tracks;stream.getAudioTracks=()=>[];
+  const win={addEventListener(){},requestAnimationFrame:()=>1,scrollBy(){},innerHeight:800,
+    navigator:{mediaDevices:{getDisplayMedia:async o=>{asked.push(o);return stream;}}}};
+  const chrome={open:h=>{opened=h;},refresh(){},close(){},isOpen:()=>false,onClose(){},query:()=>null,toast(){}};
+  const m=machine(oneItem,{win,chrome,recordLabel:'Hackathon <Record>',quickRecord:true});
+  const button=m.button('record');
+  assert.match(m.ui.html(),/<span class="rc-lbl">Hackathon &lt;Record&gt;<\/span>/,'the label is escaped');
+  assert.match(button,/aria-label="Hackathon &lt;Record&gt;"/);assert.match(button,/title="Record a video of the whole page"/);
+  m.press('record');
+  assert.equal(opened,'','no dialog');
+  assert.equal(asked.length,1);assert.equal(asked[0].preferCurrentTab,true);
+  await new Promise(r=>setTimeout(r,0));
+  assert.ok(stream.tracks.every(t=>t.stopped),'without MediaRecorder nothing records and the share ends');
+  const plain=machine(oneItem,{win,chrome});
+  assert.match(plain.ui.html(),/<span class="rc-lbl">Record<\/span>/,'Record by default');
+});
+
 test('a failed print bubbles the controls back out once the VOID slip is printed',async t=>{
   t.mock.timers.enable({apis:['setTimeout','Date'],now:Date.UTC(2026,8,30,17)});
   const m=machine(async()=>{throw new Error('GitHub could not be reached.');});

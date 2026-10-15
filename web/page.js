@@ -1,5 +1,6 @@
 // MergeOMatic page: a username, one public repository, and the receipt kit. State lives in the URL
-// (?login=&repo=&day=) so a receipt link can be shared.
+// (?login=&repo=&day=) so a receipt link can be shared. style= and appearance= pick the look for this visit (style.js),
+// and hackathon=, autoplay=, voice= and captions= turn on the recorded demo (demo.js); all are kept in the URL.
 import {createReceiptUI,validRange,DEFAULT_RANGE,lib} from './kit/receipt-ui.js';
 import {createMusic} from './music.js';
 import {recordPrint,fetchStats} from './stats.js';
@@ -8,6 +9,9 @@ const LOGIN_RE=/^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/;
 const $=id=>document.getElementById(id);
 const els={form:$('mom-form'),login:$('mom-login'),repo:$('mom-repo'),status:$('mom-status'),demo:$('mom-demo'),root:$('mom-receipt')};
 const params=new URLSearchParams(location.search);
+const KEPT=['style','appearance','hackathon','autoplay','voice','captions'];
+const flag=key=>/^(1|true|on|yes)$/i.test(params.get(key)||'');
+const demoFlags={hackathon:flag('hackathon'),autoplay:flag('autoplay'),voice:flag('voice'),captions:flag('captions')};
 const state={
   login:'',repo:'',range:validRange(params.get('day'))?params.get('day'):DEFAULT_RANGE,
   repos:null,lookup:null,lookupFor:'',demo:false
@@ -19,6 +23,7 @@ function syncUrl(){
   if(state.login)q.set('login',state.login);
   if(state.login&&state.repo)q.set('repo',state.repo);
   if(state.range!==DEFAULT_RANGE)q.set('day',state.range);
+  for(const k of KEPT)if(params.has(k))q.set(k,params.get(k));
   const next=`${location.pathname}${q.toString()?`?${q}`:''}`;
   if(next!==location.pathname+location.search)history.replaceState(null,'',next);
 }
@@ -445,6 +450,8 @@ const ui=createReceiptUI({
   islandPill:false,
   videoTitle,
   recordAudio:target=>music.attach(target),
+  ...(demoFlags.hackathon?{recordLabel:'Hackathon Record',quickRecord:true}:{}),
+  recordChanged:st=>demo?.recordChanged(st),
   recordArea:()=>{
     const boxes=['.mom-top','.mom-main'].map(s=>document.querySelector(s)?.getBoundingClientRect()).filter(b=>b?.width);
     if(!boxes.length)return null;
@@ -631,6 +638,13 @@ $('mom-try').addEventListener('click',async e=>{
   if(state.lookupFor!==sample||state.repo||!state.repos?.length)return;
   chooseRepo(state.repos[0].repo);els.repo.value=state.repo;pick.sync();
 });
+
+// The demo drives the page through its own controls; it only needs what has no control of its own.
+let demo=null;
+if(Object.values(demoFlags).some(Boolean))import('./demo.js').then(({createDemo})=>{
+  demo=createDemo({flags:demoFlags,ui,onDone:()=>ui.stopRecording(),
+    page:{els,login:(params.get('login')||'').trim(),repo:(params.get('repo')||'').trim(),appearance,music,info,halloween:()=>window.momHalloween}});
+}).catch(()=>{});
 
 const startLogin=(params.get('login')||'').trim().replace(/^@/,'');
 if(startLogin&&LOGIN_RE.test(startLogin)){
