@@ -445,6 +445,12 @@ const ui=createReceiptUI({
   islandPill:false,
   videoTitle,
   recordAudio:target=>music.attach(target),
+  recordArea:()=>{
+    const boxes=['.mom-top','.mom-main'].map(s=>document.querySelector(s)?.getBoundingClientRect()).filter(b=>b?.width);
+    if(!boxes.length)return null;
+    const x=Math.max(0,Math.min(...boxes.map(b=>b.left))-16),right=Math.min(innerWidth,Math.max(...boxes.map(b=>b.right))+16);
+    return {x,width:right-x};
+  },
   printed:countPrint,
   background:()=>getComputedStyle(document.body).backgroundColor,
   styles:false

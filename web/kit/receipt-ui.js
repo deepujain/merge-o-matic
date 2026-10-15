@@ -16,6 +16,7 @@
 //   printed({range,items}) -> optional: once per receipt, after it is torn off. Never for a VOID slip.
 //   recordAudio({context,destination}) -> optional: connect the host's own audio (music) into Record & Print's
 //     audio track, at the level it plays; returns a function that disconnects it when the recording ends.
+//   recordArea() -> optional {x,width} in viewport CSS pixels: the column a whole-page recording is cropped to.
 //   chrome: {open(html,{label,render}),refresh(),close(),isOpen(),onClose(fn),query(sel),toast(msg,tone)} to use
 //     the host's dialog and toast; without it the kit brings its own.
 import * as lib from './receipt.js';
@@ -154,7 +155,7 @@ export function createReceiptUI(host={}){
   // paper onto a canvas (receipt-video.js) from the same print job, with the machine's own audio and no share prompt.
   let recorder=null,recStage=null,recTick=0,clip=null,recAsk=null,preview=null,recMix=null,recShare=null,recReady=false;
   const canSharePage=()=>typeof win.navigator?.mediaDevices?.getDisplayMedia==='function';
-  const endShare=()=>{const s=recShare;recShare=null;for(const t of s?.getTracks?.()||[])try{t.stop();}catch{}};
+  const endShare=()=>{const s=recShare;recShare=null;try{s?.stop();}catch{}};
   const unmix=()=>{const off=recMix;recMix=null;try{off?.();}catch{}};
   const recEnv={MediaRecorder:win.MediaRecorder,MediaStream:win.MediaStream};
   const PHASES=new Set(['idle','loading','warming','printing','ready','empty','error']);
@@ -208,20 +209,57 @@ export function createReceiptUI(host={}){
     key.classList.add('is-pressed');setTimeout(()=>doc.querySelector('.rm-printkey')?.classList.remove('is-pressed'),160);
     actions.printKey();
   }
-  // Whole page: the dialog closes first so it is not filmed. Cancelling the browser's share prompt does nothing.
+  // Whole page: the dialog closes first so it is not filmed. Cancelling the browser's share prompt does nothing. The
+  // audio context is made here, inside the click, so it starts running.
   function recordPage(r){
     recAsk=null;if(chrome.isOpen())chrome.close();
+    const AC=win.AudioContext||win.webkitAudioContext;let ac=null;
+    try{ac=AC?new AC():null;}catch{ac=null;}
+    const quit=stream=>{for(const t of stream?.getTracks?.()||[])t.stop();try{ac?.close();}catch{}};
     let ask;
     try{ask=win.navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'browser',frameRate:{ideal:30}},audio:{suppressLocalAudioPlayback:false},
       preferCurrentTab:true,selfBrowserSurface:'include',surfaceSwitching:'exclude',systemAudio:'exclude',monitorTypeSurfaces:'exclude'});}
     catch(e){ask=Promise.reject(e);}
-    Promise.resolve(ask).then(stream=>{
-      const video=stream?.getVideoTracks?.()[0];
-      if(!video||r.state!=='idle'){for(const t of stream?.getTracks?.()||[])t.stop();return;}
-      recShare=stream;
-      const st=video.getSettings?.()||{};
-      if(!r.start({video,size:{width:st.width||1280,height:st.height||720,fps:st.frameRate||30},title:lib.printTitle(host.title?.(),range()),audio:stream,follow:false,capMs:rec.REC_PAGE_CAP_MS}))endShare();
-    },e=>{if(e?.name!=='NotAllowedError'&&e?.name!=='AbortError')toast(`Could not share this tab: ${e?.message||e}`,'error');});
+    Promise.resolve(ask).then(async stream=>{
+      if(!stream?.getVideoTracks?.()[0]||r.state!=='idle'){quit(stream);return;}
+      let cut=null;
+      try{cut=await pageCanvas(stream,ac);}catch{cut=null;}
+      if(!cut||r.state!=='idle'){cut?.stop();quit(stream);if(!cut)toast('Could not record this tab. Try again, or record just the machine.','error');return;}
+      recShare=cut;
+      if(!r.start({video:cut.track,size:cut,title:lib.printTitle(host.title?.(),range()),audio:cut.audio,follow:false,capMs:rec.REC_PAGE_CAP_MS})){endShare();return;}
+      cut.onEnded(()=>r.stop('ended'));
+    },e=>{quit(null);if(e?.name!=='NotAllowedError'&&e?.name!=='AbortError')toast(`Could not share this tab: ${e?.message||e}`,'error');});
+  }
+  // The shared tab is drawn onto a canvas every animation frame, cropped to host.recordArea() when given, so the video
+  // gets a steady frame rate even while the page is still. Its sound runs through an audio graph with a silent
+  // source, so the recorder always has audio to interleave; without that some browsers hold the video at frame one.
+  async function pageCanvas(stream,ac){
+    const v=doc.createElement('video');v.muted=true;v.playsInline=true;v.srcObject=stream;
+    await Promise.race([v.play().catch(()=>{}),new Promise(ok=>setTimeout(ok,4000))]);
+    for(let i=0;i<30&&!v.videoWidth;i++)await new Promise(ok=>setTimeout(ok,100));
+    if(!v.videoWidth){v.srcObject=null;return null;}
+    const vw=win.innerWidth||v.videoWidth,k=v.videoWidth/vw,a=host.recordArea?.()||null;
+    const x=Math.max(0,a?a.x:0),w=Math.min(vw-x,a?a.width:vw),sx=x*k,sw=w*k,sh=v.videoHeight;
+    const fit=Math.min(1,1920/sw,1920/sh),canvas=doc.createElement('canvas');
+    canvas.width=Math.round(sw*fit/2)*2;canvas.height=Math.round(sh*fit/2)*2;
+    const g=canvas.getContext('2d');let raf=0,live=true;
+    const draw=()=>{if(!live)return;g.drawImage(v,sx,0,sw,sh,0,0,canvas.width,canvas.height);raf=win.requestAnimationFrame(draw);};
+    draw();
+    const track=canvas.captureStream(30).getVideoTracks()[0];
+    let audio=stream;
+    if(ac){
+      try{
+        const dest=ac.createMediaStreamDestination();
+        if(stream.getAudioTracks().length)ac.createMediaStreamSource(stream).connect(dest);
+        const hum=ac.createConstantSource(),mute=ac.createGain();mute.gain.value=0;hum.connect(mute).connect(dest);hum.start();
+        Promise.resolve(ac.resume?.()).catch(()=>{});
+        audio=dest.stream;
+      }catch{audio=stream;}
+    }
+    const src=stream.getVideoTracks()[0];
+    return {track,audio,width:canvas.width,height:canvas.height,fps:30,
+      onEnded:fn=>src.addEventListener('ended',fn,{once:true}),
+      stop(){live=false;win.cancelAnimationFrame?.(raf);try{track?.stop();}catch{}for(const t of stream.getTracks())t.stop();v.srcObject=null;try{ac?.close();}catch{}}};
   }
   function recChanged(){
     clearInterval(recTick);recTick=0;
